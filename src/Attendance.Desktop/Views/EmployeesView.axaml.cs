@@ -17,9 +17,9 @@ public partial class EmployeesView : UserControl
 
     private async void EditClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is Control { DataContext: Employee employee })
+        if (sender is Control { DataContext: EmployeePresenceItem item })
         {
-            await OpenEditor(employee);
+            await OpenEditor(item.Employee);
         }
     }
 

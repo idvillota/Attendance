@@ -4,7 +4,7 @@
              xmlns:domain="using:Attendance.Core.Domain"
              x:Class="Attendance.Desktop.Views.ReportView"
              x:DataType="vm:ReportViewModel">
-    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="16">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" RowSpacing="16">
         <DockPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
                 <Button Content="Semana anterior" Command="{Binding PreviousWeekCommand}"/>
@@ -39,7 +39,48 @@
             </Border>
         </UniformGrid>
 
-        <Border Grid.Row="2" Classes="card" Padding="0">
+        <Border Grid.Row="2" Classes="card">
+            <StackPanel Spacing="10">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Ellipse Width="10" Height="10" Fill="#98A2B3"/>
+                            <TextBlock Classes="muted" Text="Inactivo" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Ellipse Width="10" Height="10" Fill="#F5A524"/>
+                            <TextBlock Classes="muted" Text="Fuera" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Ellipse Width="10" Height="10" Fill="#12B76A"/>
+                            <TextBlock Classes="muted" Text="En turno" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock Text="Quién está en turno" FontWeight="SemiBold"/>
+                </DockPanel>
+                <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding PresenceFreshness}"/>
+                <ItemsControl ItemsSource="{Binding PresenceItems}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:EmployeePresenceItem">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,20,8">
+                                <Ellipse Width="12" Height="12" Fill="{Binding Fill}" VerticalAlignment="Center"/>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                    <TextBlock Classes="muted" FontSize="12" Text="{Binding PresenceLabel}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="3" Classes="card" Padding="0">
             <DataGrid ItemsSource="{Binding Lines}"
                       IsReadOnly="True"
                       AutoGenerateColumns="False"
@@ -87,8 +128,8 @@
             </DataGrid>
         </Border>
 
-        <TextBlock Grid.Row="3" Text="Para revisar antes de pagar" FontWeight="SemiBold"/>
-        <Border Grid.Row="4" Classes="card" Padding="0" MinHeight="120">
+        <TextBlock Grid.Row="4" Text="Para revisar antes de pagar" FontWeight="SemiBold"/>
+        <Border Grid.Row="5" Classes="card" Padding="0" MinHeight="120">
             <DataGrid ItemsSource="{Binding Issues}"
                       IsReadOnly="True"
                       AutoGenerateColumns="False"

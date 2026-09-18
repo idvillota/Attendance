@@ -33,6 +33,7 @@ public partial class ReportViewModel : ViewModelBase
 
     public ObservableCollection<WeeklyReportLine> Lines { get; } = [];
     public ObservableCollection<PunchIssue> Issues { get; } = [];
+    public ObservableCollection<EmployeePresenceItem> PresenceItems { get; } = [];
 
     [ObservableProperty]
     private DateTimeOffset _weekStartDate = DateTimeOffset.Now;
@@ -54,6 +55,9 @@ public partial class ReportViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _hasIssues;
+
+    [ObservableProperty]
+    private string _presenceFreshness = string.Empty;
 
     private DateOnly WeekStart { get; set; }
     private WeeklyReport? _report;
@@ -85,6 +89,14 @@ public partial class ReportViewModel : ViewModelBase
         Status = _report.Issues.Count == 0
             ? "Todas las jornadas están cerradas. Ya puede exportar."
             : $"{_report.Issues.Count} marcación(es) incompletas. Corrija antes de pagar.";
+
+        PresenceItems.Clear();
+        foreach (var status in Presence.Snapshot(_store.GetEmployees(), _store.GetPunches()))
+        {
+            PresenceItems.Add(new EmployeePresenceItem(status));
+        }
+
+        PresenceFreshness = PresenceStatus.Freshness(_store.GetSettings().LastDownloadAt);
     }
 
     [RelayCommand]

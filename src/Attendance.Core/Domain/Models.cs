@@ -89,6 +89,7 @@ public sealed class AppSettings
     public string DeviceIp { get; set; } = "192.168.1.201";
     public int DevicePort { get; set; } = 4370;
     public int DeviceNumber { get; set; } = 1;
+    public DateTime? LastDownloadAt { get; set; }
     public TenantSchedule Schedule { get; set; } = TenantSchedule.Default();
 }
 

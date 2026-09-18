@@ -28,6 +28,12 @@ public class AttendanceDbTests
             new PayrollExcelExporter().Export(report, xlsx);
             Assert.True(File.Exists(xlsx));
             File.Delete(xlsx);
+
+            db.SaveSettings(new Attendance.Core.Domain.AppSettings
+            {
+                LastDownloadAt = new DateTime(2026, 9, 17, 21, 0, 0)
+            });
+            Assert.Equal("2026-09-17T21:00:00", db.GetSettings().LastDownloadAt!.Value.ToString("s"));
         }
         finally
         {

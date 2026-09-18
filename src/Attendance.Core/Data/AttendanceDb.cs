@@ -206,6 +206,7 @@ public sealed class AttendanceDb : IAttendanceStore
             DeviceIp = SqliteSession.GetString(map, "device_ip", "192.168.1.201"),
             DevicePort = SqliteSession.GetInt(map, "device_port", 4370),
             DeviceNumber = SqliteSession.GetInt(map, "device_number", 1),
+            LastDownloadAt = SqliteSession.GetTime(map, "last_download_at"),
             Schedule = ScheduleSettingsMapper.FromMap(map)
         };
     }
@@ -216,6 +217,10 @@ public sealed class AttendanceDb : IAttendanceStore
         UpsertSetting("device_ip", settings.DeviceIp.Trim());
         UpsertSetting("device_port", settings.DevicePort.ToString(System.Globalization.CultureInfo.InvariantCulture));
         UpsertSetting("device_number", settings.DeviceNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        if (settings.LastDownloadAt is { } lastDownload)
+        {
+            UpsertSetting("last_download_at", SqliteSession.FormatTime(lastDownload));
+        }
     }
 
     public TenantSchedule GetSchedule() => GetSettings().Schedule;

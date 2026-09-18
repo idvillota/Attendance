@@ -19,12 +19,16 @@ public static class WeekRange
 
 public static class ShiftPairing
 {
-    public sealed record Result(IReadOnlyList<Shift> Shifts, IReadOnlyList<PunchIssue> Issues);
+    public sealed record Result(
+        IReadOnlyList<Shift> Shifts,
+        IReadOnlyList<PunchIssue> Issues,
+        IReadOnlyList<Punch> OpenIns);
 
     public static Result Pair(IEnumerable<Punch> punches)
     {
         var shifts = new List<Shift>();
         var issues = new List<PunchIssue>();
+        var openIns = new List<Punch>();
 
         foreach (var group in punches.GroupBy(p => p.EmployeeId))
         {
@@ -65,10 +69,11 @@ public static class ShiftPairing
             if (open is not null)
             {
                 issues.Add(new PunchIssue(open.EmployeeId, open.Id, open.PunchedAt, "Entrada sin salida"));
+                openIns.Add(open);
             }
         }
 
-        return new Result(shifts, issues);
+        return new Result(shifts, issues, openIns);
     }
 }
 

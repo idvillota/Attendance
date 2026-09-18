@@ -29,13 +29,17 @@ public sealed class AttendanceSyncService : IAttendanceSyncService
         var device = CreateDevice(settings);
         var logs = await device.DownloadLogsAsync(cancellationToken).ConfigureAwait(false);
         var source = settings.UseMockDevice ? PunchSource.Mock : PunchSource.Device;
-        return (device, Import(logs, source));
+        var imported = Import(logs, source);
+        RememberDownload();
+        return (device, imported);
     }
 
     public async Task<int> DownloadAsync(IAttendanceDevice device, CancellationToken cancellationToken = default)
     {
         var logs = await device.DownloadLogsAsync(cancellationToken).ConfigureAwait(false);
-        return Import(logs, PunchSource.Device);
+        var imported = Import(logs, PunchSource.Device);
+        RememberDownload();
+        return imported;
     }
 
     public int Import(IEnumerable<DevicePunch> logs, PunchSource source)
@@ -59,5 +63,17 @@ public sealed class AttendanceSyncService : IAttendanceSyncService
         return inserted;
     }
 
-    public int ImportCsv(string path) => Import(PunchCsvParser.ParseFile(path), PunchSource.Import);
+    public int ImportCsv(string path)
+    {
+        var imported = Import(PunchCsvParser.ParseFile(path), PunchSource.Import);
+        RememberDownload();
+        return imported;
+    }
+
+    private void RememberDownload()
+    {
+        var settings = _store.GetSettings();
+        settings.LastDownloadAt = DateTime.Now;
+        _store.SaveSettings(settings);
+    }
 }

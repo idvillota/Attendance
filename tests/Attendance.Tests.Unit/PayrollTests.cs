@@ -34,6 +34,7 @@ public class ShiftPairingTests
 
         Assert.Empty(result.Shifts);
         Assert.Equal("Entrada sin salida", Assert.Single(result.Issues).Message);
+        Assert.Equal(punches[0].Id, Assert.Single(result.OpenIns).Id);
     }
 
     [Fact]
@@ -143,6 +144,83 @@ public class WeekRangeTests
     public void Monday_is_start_of_week()
     {
         Assert.Equal(new DateOnly(2026, 9, 14), WeekRange.StartOfWeek(new DateOnly(2026, 9, 17)));
+    }
+}
+
+public class PresenceTests
+{
+    [Fact]
+    public void Inactive_employee_is_grey_even_with_open_in()
+    {
+        var employees = new[]
+        {
+            new Employee { Id = 1, Name = "Ana", RoleName = "Mesero", IsActive = false }
+        };
+        var punches = new[]
+        {
+            MakePunch(1, "2026-09-17T08:00:00", PunchDirection.In)
+        };
+
+        var status = Assert.Single(Presence.Snapshot(employees, punches));
+
+        Assert.Equal(PresenceKind.Disabled, status.Kind);
+        Assert.Equal("Inactivo", status.Label);
+    }
+
+    [Fact]
+    public void Active_without_open_shift_is_yellow()
+    {
+        var employees = new[]
+        {
+            new Employee { Id = 1, Name = "Ana", RoleName = "Mesero", IsActive = true }
+        };
+        var punches = new[]
+        {
+            MakePunch(1, "2026-09-17T08:00:00", PunchDirection.In),
+            MakePunch(1, "2026-09-17T16:00:00", PunchDirection.Out)
+        };
+
+        var status = Assert.Single(Presence.Snapshot(employees, punches));
+
+        Assert.Equal(PresenceKind.NotCheckedIn, status.Kind);
+        Assert.Equal("Fuera", status.Label);
+    }
+
+    [Fact]
+    public void Active_with_open_in_is_green()
+    {
+        var employees = new[]
+        {
+            new Employee { Id = 1, Name = "Ana", RoleName = "Mesero", IsActive = true }
+        };
+        var punches = new[]
+        {
+            MakePunch(1, "2026-09-17T08:00:00", PunchDirection.In)
+        };
+
+        var status = Assert.Single(Presence.Snapshot(employees, punches));
+
+        Assert.Equal(PresenceKind.CheckedIn, status.Kind);
+        Assert.Equal(DateTime.Parse("2026-09-17T08:00:00"), status.ClockedInAt);
+    }
+
+    [Fact]
+    public void Closed_shift_after_abandoned_in_is_not_working()
+    {
+        var employees = new[]
+        {
+            new Employee { Id = 1, Name = "Ana", IsActive = true }
+        };
+        var punches = new[]
+        {
+            MakePunch(1, "2026-09-17T08:00:00", PunchDirection.In),
+            MakePunch(1, "2026-09-17T09:00:00", PunchDirection.In),
+            MakePunch(1, "2026-09-17T16:00:00", PunchDirection.Out)
+        };
+
+        var status = Assert.Single(Presence.Snapshot(employees, punches));
+
+        Assert.Equal(PresenceKind.NotCheckedIn, status.Kind);
     }
 }
 

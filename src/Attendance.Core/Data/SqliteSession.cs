@@ -40,4 +40,16 @@ internal sealed class SqliteSession
 
     public static string GetString(IReadOnlyDictionary<string, string> map, string key, string fallback)
         => map.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : fallback;
+
+    public static DateTime? GetTime(IReadOnlyDictionary<string, string> map, string key)
+    {
+        if (!map.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed)
+            ? parsed
+            : null;
+    }
 }
