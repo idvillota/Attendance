@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Attendance.Desktop.ViewModels"
+        x:Class="Attendance.Desktop.Views.RoleEditorWindow"
+        x:DataType="vm:RoleEditorViewModel"
+        Title="{Binding Title}"
+        Width="400"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Padding="24">
+    <StackPanel Spacing="12">
+        <TextBlock Text="{Binding Title}" Classes="h1"/>
+        <TextBlock Classes="muted" TextWrapping="Wrap"
+                   Text="El valor por hora se usa en el reporte semanal: horas × este valor."/>
+        <TextBox Watermark="Nombre (ej. Mesero)" Text="{Binding FormName}"/>
+        <TextBox Watermark="Valor por hora" Text="{Binding HourlyRateText}"/>
+        <CheckBox Content="Activo" IsChecked="{Binding IsActive}"/>
+        <TextBlock Text="{Binding Error}" Foreground="#B42318" TextWrapping="Wrap"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
+            <Button Content="Cancelar" Click="CancelClick"/>
+            <Button Content="Guardar" Classes="accent" Click="SaveClick"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Attendance.Desktop.ViewModels"
+             xmlns:domain="using:Attendance.Core.Domain"
+             x:Class="Attendance.Desktop.Views.RolesView"
+             x:DataType="vm:RolesViewModel">
+    <Grid RowDefinitions="Auto,*" RowSpacing="16">
+        <DockPanel>
+            <Button DockPanel.Dock="Right"
+                    Content="Nuevo rol"
+                    Classes="accent"
+                    Click="AddClick"
+                    VerticalAlignment="Top"/>
+            <TextBlock Classes="muted" TextWrapping="Wrap" Margin="0,0,16,0"
+                       Text="Cada rol tiene un valor por hora. El pago semanal es horas trabajadas × este valor."/>
+        </DockPanel>
+
+        <Border Grid.Row="1" Classes="card" Padding="8,4">
+            <ListBox ItemsSource="{Binding Roles}" Background="Transparent" BorderThickness="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="domain:Role">
+                        <Grid ColumnDefinitions="*,Auto,Auto" Margin="8,10" ColumnSpacing="16">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding StatusLabel}" Classes="muted"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding RateLabel}"
+                                       VerticalAlignment="Center"
+                                       FontWeight="SemiBold"/>
+                            <Button Grid.Column="2"
+                                    Content="Editar"
+                                    Classes="ghost"
+                                    VerticalAlignment="Center"
+                                    Click="EditClick"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+    </Grid>
+</UserControl>

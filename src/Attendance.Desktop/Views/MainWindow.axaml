@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Attendance.Desktop.ViewModels"
+        xmlns:views="using:Attendance.Desktop.Views"
+        x:Class="Attendance.Desktop.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="Host Asistencia"
+        Width="1180"
+        Height="760"
+        MinWidth="960"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="#F2F4F7">
+    <Window.DataTemplates>
+        <DataTemplate DataType="vm:EmployeesViewModel">
+            <views:EmployeesView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:RolesViewModel">
+            <views:RolesView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:PunchesViewModel">
+            <views:PunchesView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:ReportViewModel">
+            <views:ReportView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:DeviceViewModel">
+            <views:DeviceView />
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <Grid ColumnDefinitions="236,*">
+        <Border Background="#101828" Padding="20,24">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="8,0,8,28">
+                    <TextBlock Text="Host Asistencia" FontSize="20" FontWeight="SemiBold" Foreground="White"/>
+                    <TextBlock Text="Nómina semanal · K30" Foreground="#98A2B3" FontSize="12"/>
+                </StackPanel>
+                <ListBox Classes="nav"
+                         ItemsSource="{Binding NavItems}"
+                         SelectedIndex="{Binding NavIndex}"/>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Column="1" RowDefinitions="Auto,*">
+            <Border Padding="28,22,28,12">
+                <TextBlock Text="{Binding CurrentSection}" Classes="h1"/>
+            </Border>
+            <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" Margin="28,8,28,28"/>
+        </Grid>
+    </Grid>
+</Window>

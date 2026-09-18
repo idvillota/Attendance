@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Attendance.Desktop.ViewModels"
+             x:Class="Attendance.Desktop.Views.DeviceView"
+             x:DataType="vm:DeviceViewModel">
+    <StackPanel MaxWidth="640" Spacing="16">
+        <Border Classes="card">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Conexión al reloj" FontWeight="SemiBold" FontSize="16"/>
+                <TextBlock Classes="muted" TextWrapping="Wrap"
+                           Text="Las personas marcan con la huella en el K30. Esta PC solo descarga esas marcaciones. En el Mac deje el simulador encendido."/>
+                <CheckBox Content="Usar simulador (Mac / pruebas)" IsChecked="{Binding UseMockDevice}"/>
+                <TextBox Watermark="IP del K30" Text="{Binding DeviceIp}"/>
+                <TextBox Watermark="Puerto (4370)" Text="{Binding DevicePort}"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Guardar" Command="{Binding SaveCommand}"/>
+                    <Button Content="Probar conexión" Command="{Binding TestCommand}"/>
+                    <Button Content="Descargar ahora" Classes="accent" Command="{Binding DownloadCommand}"/>
+                    <Button Content="Importar CSV" Click="ImportCsvClick"/>
+                </StackPanel>
+                <TextBlock Text="{Binding Status}" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+        <Border Classes="card">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Respaldo" FontWeight="SemiBold"/>
+                <TextBlock Classes="muted" TextWrapping="Wrap"
+                           Text="{Binding DatabasePath, StringFormat='Copie este archivo para no perder la nómina: {0}'}"/>
+                <TextBlock Classes="muted" TextWrapping="Wrap"
+                           Text="CSV de respaldo: DeviceUserId,FechaHora,Entrada|Salida"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

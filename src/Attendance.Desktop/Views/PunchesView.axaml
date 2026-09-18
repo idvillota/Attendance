@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Attendance.Desktop.ViewModels"
+             xmlns:domain="using:Attendance.Core.Domain"
+             x:Class="Attendance.Desktop.Views.PunchesView"
+             x:DataType="vm:PunchesViewModel">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16">
+        <TextBlock Classes="muted" TextWrapping="Wrap"
+                   Text="Use esta pantalla solo para corregir una entrada o salida que el K30 no trajo bien. No es el reloj: las personas marcan en el dispositivo."/>
+
+        <Border Grid.Row="1" Classes="card">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Agregar corrección" FontWeight="SemiBold"/>
+                <WrapPanel ItemWidth="220" ItemHeight="40">
+                    <ComboBox Margin="0,0,8,8"
+                              HorizontalAlignment="Stretch"
+                              ItemsSource="{Binding Employees}"
+                              SelectedItem="{Binding SelectedEmployee}"
+                              PlaceholderText="Persona">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="domain:Employee">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <DatePicker Margin="0,0,8,8" SelectedDate="{Binding PunchedAt}"/>
+                    <ComboBox Margin="0,0,8,8"
+                              Width="160"
+                              ItemsSource="{Binding Directions}"
+                              SelectedItem="{Binding Direction}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DirectionChoice">
+                                <TextBlock Text="{Binding Label}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Margin="0,0,8,8" Content="Agregar" Classes="accent" Command="{Binding AddCommand}"/>
+                    <Button Margin="0,0,8,8" Content="Eliminar seleccionada" Command="{Binding DeleteCommand}"/>
+                </WrapPanel>
+                <TextBlock Text="{Binding Status}" Classes="muted"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Classes="card" Padding="0">
+            <DataGrid ItemsSource="{Binding Punches}"
+                      SelectedItem="{Binding Selected}"
+                      IsReadOnly="True"
+                      AutoGenerateColumns="False"
+                      CanUserResizeColumns="True"
+                      GridLinesVisibility="Horizontal"
+                      BorderThickness="0"
+                      Background="Transparent">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Persona" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:Punch">
+                                <TextBlock Text="{Binding EmployeeName}" VerticalAlignment="Center" Margin="16,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Fecha y hora" Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:Punch">
+                                <TextBlock Text="{Binding PunchedAt, StringFormat=g}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Tipo" Width="110">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:Punch">
+                                <TextBlock Text="{Binding DirectionLabel}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Origen" Width="110">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:Punch">
+                                <TextBlock Text="{Binding SourceLabel}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>

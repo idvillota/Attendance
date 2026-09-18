@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Attendance.Desktop.ViewModels"
+        xmlns:domain="using:Attendance.Core.Domain"
+        x:Class="Attendance.Desktop.Views.EmployeeEditorWindow"
+        x:DataType="vm:EmployeeEditorViewModel"
+        Title="{Binding Title}"
+        Width="440"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Padding="24">
+    <StackPanel Spacing="12">
+        <TextBlock Text="{Binding Title}" Classes="h1"/>
+        <TextBlock Classes="muted" TextWrapping="Wrap"
+                   Text="El ID del K30 es el número con el que la persona está inscrita en el reloj."/>
+        <TextBox Watermark="Nombre" Text="{Binding FormName}"/>
+        <ComboBox ItemsSource="{Binding Roles}"
+                  SelectedItem="{Binding SelectedRole}"
+                  PlaceholderText="Rol"
+                  HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="domain:Role">
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBox Watermark="ID en el K30" Text="{Binding FormDeviceUserId}"/>
+        <CheckBox Content="Activo" IsChecked="{Binding IsActive}"/>
+        <TextBlock Text="{Binding Error}" Foreground="#B42318" TextWrapping="Wrap"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
+            <Button Content="Cancelar" Click="CancelClick"/>
+            <Button Content="Guardar" Classes="accent" Click="SaveClick"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

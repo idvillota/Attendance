@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/Attendance.Core/Attendance.Core.csproj" />
+  <Project Path="src/Attendance.Desktop/Attendance.Desktop.csproj" />
+  <Project Path="tests/Attendance.Tests.Unit/Attendance.Tests.Unit.csproj" />
+</Solution>

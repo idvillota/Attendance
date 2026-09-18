@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Attendance.Desktop.ViewModels"
+             xmlns:domain="using:Attendance.Core.Domain"
+             x:Class="Attendance.Desktop.Views.ReportView"
+             x:DataType="vm:ReportViewModel">
+    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="16">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+                <Button Content="Semana anterior" Command="{Binding PreviousWeekCommand}"/>
+                <Button Content="Semana siguiente" Command="{Binding NextWeekCommand}"/>
+                <Button Content="Bajar marcaciones" Classes="accent" Command="{Binding DownloadCommand}"/>
+                <Button Content="Exportar Excel" Click="ExportClick"/>
+            </StackPanel>
+            <StackPanel Spacing="2">
+                <TextBlock Text="{Binding WeekLabel}" FontWeight="SemiBold"/>
+                <TextBlock Classes="muted" Text="{Binding Status}" TextWrapping="Wrap"/>
+            </StackPanel>
+        </DockPanel>
+
+        <UniformGrid Grid.Row="1" Columns="3">
+            <Border Classes="stat" Margin="0,0,8,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="muted" Text="Personas"/>
+                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="{Binding PeopleCountText}"/>
+                </StackPanel>
+            </Border>
+            <Border Classes="stat" Margin="8,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="muted" Text="Horas"/>
+                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="{Binding TotalHoursText}"/>
+                </StackPanel>
+            </Border>
+            <Border Classes="stat" Margin="8,0,0,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="muted" Text="Nómina de la semana"/>
+                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="{Binding TotalPayText}"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <Border Grid.Row="2" Classes="card" Padding="0">
+            <DataGrid ItemsSource="{Binding Lines}"
+                      IsReadOnly="True"
+                      AutoGenerateColumns="False"
+                      CanUserResizeColumns="True"
+                      GridLinesVisibility="Horizontal"
+                      BorderThickness="0"
+                      Background="Transparent">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Persona" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:WeeklyReportLine">
+                                <TextBlock Text="{Binding EmployeeName}" VerticalAlignment="Center" Margin="16,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Rol" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:WeeklyReportLine">
+                                <TextBlock Text="{Binding RoleName}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Horas" Width="90">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:WeeklyReportLine">
+                                <TextBlock Text="{Binding Hours, StringFormat=0.##}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Valor hora" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:WeeklyReportLine">
+                                <TextBlock Text="{Binding HourlyRate, StringFormat=N0}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="A pagar" Width="130">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:WeeklyReportLine">
+                                <TextBlock Text="{Binding Pay, StringFormat=N0}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <TextBlock Grid.Row="3" Text="Para revisar antes de pagar" FontWeight="SemiBold"/>
+        <Border Grid.Row="4" Classes="card" Padding="0" MinHeight="120">
+            <DataGrid ItemsSource="{Binding Issues}"
+                      IsReadOnly="True"
+                      AutoGenerateColumns="False"
+                      BorderThickness="0"
+                      Background="Transparent"
+                      GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Persona" Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:PunchIssue">
+                                <TextBlock Text="{Binding EmployeeName}" VerticalAlignment="Center" Margin="16,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Fecha" Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:PunchIssue">
+                                <TextBlock Text="{Binding PunchedAt, StringFormat=g}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Problema" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="domain:PunchIssue">
+                                <TextBlock Text="{Binding Message}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>

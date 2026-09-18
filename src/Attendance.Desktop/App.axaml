@@ -1,0 +1,71 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Attendance.Desktop.App"
+             RequestedThemeVariant="Light"
+             xmlns:local="using:Attendance.Desktop">
+    <Application.Resources>
+        <local:BoolToSiNoConverter x:Key="BoolToSiNo"/>
+    </Application.Resources>
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        <Style Selector="TextBlock.h1">
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="#667085"/>
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="BoxShadow" Value="0 1 2 0 #10182814"/>
+        </Style>
+        <Style Selector="Border.stat">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="18,16"/>
+            <Setter Property="BoxShadow" Value="0 1 2 0 #10182814"/>
+        </Style>
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+        <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1D4ED8"/>
+        </Style>
+        <Style Selector="Button.ghost">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#344054"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+        <Style Selector="ListBox.nav">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem">
+            <Setter Property="Foreground" Value="#D0D5DD"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1D2939"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1D2939"/>
+        </Style>
+        <Style Selector="DataGrid">
+            <Setter Property="RowHeight" Value="44"/>
+        </Style>
+    </Application.Styles>
+</Application>

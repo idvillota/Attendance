@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Attendance.Desktop.ViewModels"
+             xmlns:domain="using:Attendance.Core.Domain"
+             x:Class="Attendance.Desktop.Views.EmployeesView"
+             x:DataType="vm:EmployeesViewModel">
+    <Grid RowDefinitions="Auto,*" RowSpacing="16">
+        <DockPanel>
+            <Button DockPanel.Dock="Right"
+                    Content="Nueva persona"
+                    Classes="accent"
+                    Click="AddClick"
+                    VerticalAlignment="Top"/>
+            <StackPanel Spacing="4" Margin="0,0,16,0">
+                <TextBlock Classes="muted" TextWrapping="Wrap"
+                           Text="Directorio del restaurante. Las personas marcan en el K30; aquí solo se edita quién es quién."/>
+            </StackPanel>
+        </DockPanel>
+
+        <Border Grid.Row="1" Classes="card" Padding="8,4">
+            <ListBox ItemsSource="{Binding Employees}"
+                     Background="Transparent"
+                     BorderThickness="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="domain:Employee">
+                        <Grid ColumnDefinitions="*,Auto" Margin="8,10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Subtitle}" Classes="muted"/>
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Content="Editar"
+                                    Classes="ghost"
+                                    VerticalAlignment="Center"
+                                    Click="EditClick"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+    </Grid>
+</UserControl>
