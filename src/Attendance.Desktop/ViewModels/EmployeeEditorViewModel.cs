@@ -6,13 +6,13 @@ namespace Attendance.Desktop.ViewModels;
 
 public partial class EmployeeEditorViewModel : ViewModelBase
 {
-    private readonly AttendanceDb _db;
+    private readonly IAttendanceStore _store;
     private readonly long? _id;
 
-    public EmployeeEditorViewModel(AttendanceDb db, Employee? employee)
+    public EmployeeEditorViewModel(IAttendanceStore store, Employee? employee)
     {
-        _db = db;
-        Roles = [.. db.GetRoles(activeOnly: true)];
+        _store = store;
+        Roles = [.. store.GetRoles(activeOnly: true)];
         if (employee is null)
         {
             Title = "Nueva persona";
@@ -58,11 +58,11 @@ public partial class EmployeeEditorViewModel : ViewModelBase
         {
             if (_id is null)
             {
-                _db.AddEmployee(FormName, SelectedRole.Id, FormDeviceUserId);
+                _store.AddEmployee(FormName, SelectedRole.Id, FormDeviceUserId);
             }
             else
             {
-                _db.UpdateEmployee(new Employee
+                _store.UpdateEmployee(new Employee
                 {
                     Id = _id.Value,
                     Name = FormName,

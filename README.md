@@ -1,6 +1,6 @@
 # Host Asistencia
 
-Desktop app for a small restaurant: employees clock in/out on a **ZKTeco K30**, this program stores punches locally (SQLite, no server), and each week it builds **hours × role hourly rate**.
+Desktop app for a small restaurant: employees clock in/out on a **ZKTeco K30**, this program stores punches locally (SQLite, no server), and each week it prices hours by **when** they were worked (ordinary / night / Sunday / extra) using the COP amounts on each role.
 
 ## Run on this Mac
 
@@ -23,6 +23,14 @@ Backup: copy the SQLite file shown on the Reloj K30 screen (`HostAttendance/atte
 
 ## Weekly pay
 
-`pago = horas trabajadas × valor por hora del rol`
+Pay is sliced by the 7×24 calendar in **Horario y recargos** and the eight COP cells on each role. Colombia 2S 2026 values are a fill helper in the role editor; admins can change any amount.
 
 Entrada without salida (or the reverse) is listed as an anomaly and is not paid until you fix the punch.
+
+Excel export has three sheets: **Nomina**, **Por_hora**, and **Anomalias**.
+
+## Layout
+
+- `Attendance.Core` — domain, SQLite store, banded payroll, K30/mock/CSV sync, Excel export
+- `Attendance.Desktop` — Avalonia MVVM shell (Spanish UI)
+- `Attendance.Tests.Unit` — pairing, banded pay, seed + Excel

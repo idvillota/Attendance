@@ -6,22 +6,22 @@ namespace Attendance.Desktop.ViewModels;
 
 public partial class RolesViewModel : ViewModelBase
 {
-    private readonly AttendanceDb _db;
+    private readonly IAttendanceStore _store;
 
-    public RolesViewModel(AttendanceDb db)
+    public RolesViewModel(IAttendanceStore store)
     {
-        _db = db;
+        _store = store;
         Reload();
     }
 
     public ObservableCollection<Role> Roles { get; } = [];
 
-    public RoleEditorViewModel CreateEditor(Role? role) => new(_db, role);
+    public RoleEditorViewModel CreateEditor(Role? role) => new(_store, role);
 
     public void Reload()
     {
         Roles.Clear();
-        foreach (var role in _db.GetRoles())
+        foreach (var role in _store.GetRoles())
         {
             Roles.Add(role);
         }

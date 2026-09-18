@@ -4,6 +4,8 @@ namespace Attendance.Desktop.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
+    private readonly IReadOnlyList<AppSection> _sections;
+
     public MainViewModel(
         RolesViewModel roles,
         EmployeesViewModel employees,
@@ -18,19 +20,21 @@ public partial class MainViewModel : ViewModelBase
         Report = report;
         Device = device;
         Schedule = schedule;
+        _sections =
+        [
+            new("Esta semana", report, report.Reload),
+            new("Personas", employees, employees.Reload),
+            new("Roles", roles, roles.Reload),
+            new("Horario y recargos", schedule, schedule.Reload),
+            new("Corregir marcaciones", punches, punches.Reload),
+            new("Reloj K30", device, device.Reload)
+        ];
+        NavItems = _sections.Select(s => s.Title).ToArray();
         CurrentPage = report;
         CurrentSection = NavItems[0];
     }
 
-    public string[] NavItems { get; } =
-    [
-        "Esta semana",
-        "Personas",
-        "Roles",
-        "Horario y recargos",
-        "Corregir marcaciones",
-        "Reloj K30"
-    ];
+    public string[] NavItems { get; }
 
     public RolesViewModel Roles { get; }
     public EmployeesViewModel Employees { get; }
@@ -50,38 +54,16 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnNavIndexChanged(int value)
     {
-        switch (value)
+        if ((uint)value >= (uint)_sections.Count)
         {
-            case 0:
-                Report.Reload();
-                CurrentPage = Report;
-                CurrentSection = NavItems[0];
-                break;
-            case 1:
-                Employees.Reload();
-                CurrentPage = Employees;
-                CurrentSection = NavItems[1];
-                break;
-            case 2:
-                Roles.Reload();
-                CurrentPage = Roles;
-                CurrentSection = NavItems[2];
-                break;
-            case 3:
-                Schedule.Reload();
-                CurrentPage = Schedule;
-                CurrentSection = NavItems[3];
-                break;
-            case 4:
-                Punches.Reload();
-                CurrentPage = Punches;
-                CurrentSection = NavItems[4];
-                break;
-            case 5:
-                Device.Reload();
-                CurrentPage = Device;
-                CurrentSection = NavItems[5];
-                break;
+            return;
         }
+
+        var section = _sections[value];
+        section.Reload();
+        CurrentPage = section.Page;
+        CurrentSection = section.Title;
     }
+
+    private sealed record AppSection(string Title, ViewModelBase Page, Action Reload);
 }

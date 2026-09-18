@@ -8,11 +8,11 @@ namespace Attendance.Desktop.ViewModels;
 
 public partial class PunchesViewModel : ViewModelBase
 {
-    private readonly AttendanceDb _db;
+    private readonly IAttendanceStore _store;
 
-    public PunchesViewModel(AttendanceDb db)
+    public PunchesViewModel(IAttendanceStore store)
     {
-        _db = db;
+        _store = store;
         Direction = Directions[0];
         Reload();
     }
@@ -43,13 +43,13 @@ public partial class PunchesViewModel : ViewModelBase
     public void Reload()
     {
         Punches.Clear();
-        foreach (var punch in _db.GetPunches())
+        foreach (var punch in _store.GetPunches())
         {
             Punches.Add(punch);
         }
 
         Employees.Clear();
-        foreach (var employee in _db.GetEmployees(activeOnly: true))
+        foreach (var employee in _store.GetEmployees(activeOnly: true))
         {
             Employees.Add(employee);
         }
@@ -66,7 +66,7 @@ public partial class PunchesViewModel : ViewModelBase
             return;
         }
 
-        _db.AddPunch(
+        _store.AddPunch(
             SelectedEmployee.Id,
             PunchedAt?.LocalDateTime ?? DateTime.Now,
             Direction?.Value ?? PunchDirection.In,
@@ -83,7 +83,7 @@ public partial class PunchesViewModel : ViewModelBase
             return;
         }
 
-        _db.DeletePunch(Selected.Id);
+        _store.DeletePunch(Selected.Id);
         Reload();
         Status = "Marcación eliminada.";
     }

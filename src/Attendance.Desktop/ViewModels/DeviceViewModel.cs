@@ -1,7 +1,6 @@
 using Attendance.Core;
 using Attendance.Core.Data;
 using Attendance.Core.Device;
-using Attendance.Core.Domain;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -9,12 +8,12 @@ namespace Attendance.Desktop.ViewModels;
 
 public partial class DeviceViewModel : ViewModelBase
 {
-    private readonly AttendanceDb _db;
-    private readonly AttendanceSyncService _sync;
+    private readonly IAttendanceStore _store;
+    private readonly IAttendanceSyncService _sync;
 
-    public DeviceViewModel(AttendanceDb db, AttendanceSyncService sync)
+    public DeviceViewModel(IAttendanceStore store, IAttendanceSyncService sync)
     {
-        _db = db;
+        _store = store;
         _sync = sync;
         Reload();
     }
@@ -36,11 +35,11 @@ public partial class DeviceViewModel : ViewModelBase
 
     public void Reload()
     {
-        var settings = _db.GetSettings();
+        var settings = _store.GetSettings();
         UseMockDevice = settings.UseMockDevice;
         DeviceIp = settings.DeviceIp;
         DevicePort = settings.DevicePort.ToString();
-        DatabasePath = _db.FilePath;
+        DatabasePath = _store.FilePath;
     }
 
     [RelayCommand]
@@ -52,12 +51,11 @@ public partial class DeviceViewModel : ViewModelBase
             return;
         }
 
-        _db.SaveSettings(new AppSettings
-        {
-            UseMockDevice = UseMockDevice,
-            DeviceIp = DeviceIp,
-            DevicePort = port
-        });
+        var settings = _store.GetSettings();
+        settings.UseMockDevice = UseMockDevice;
+        settings.DeviceIp = DeviceIp;
+        settings.DevicePort = port;
+        _store.SaveSettings(settings);
         Status = "Configuración guardada.";
     }
 
@@ -67,7 +65,7 @@ public partial class DeviceViewModel : ViewModelBase
         try
         {
             Save();
-            var device = _sync.CreateDevice(_db.GetSettings());
+            var device = _sync.CreateDevice(_store.GetSettings());
             await device.TestConnectionAsync();
             Status = $"Conexión OK: {device.Name}";
         }
@@ -83,9 +81,7 @@ public partial class DeviceViewModel : ViewModelBase
         try
         {
             Save();
-            var device = _sync.CreateDevice(_db.GetSettings());
-            var inserted = await device.DownloadLogsAsync();
-            var count = _sync.Import(inserted, UseMockDevice ? PunchSource.Mock : PunchSource.Device);
+            var (device, count) = await _sync.DownloadConfiguredAsync(_store.GetSettings());
             Status = count == 0
                 ? $"Sin marcaciones nuevas desde {device.Name}."
                 : $"Se importaron {count} marcación(es) desde {device.Name}.";

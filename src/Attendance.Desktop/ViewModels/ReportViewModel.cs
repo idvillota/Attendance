@@ -12,18 +12,18 @@ namespace Attendance.Desktop.ViewModels;
 
 public partial class ReportViewModel : ViewModelBase
 {
-    private readonly AttendanceDb _db;
-    private readonly WeeklyPayrollService _payroll;
-    private readonly PayrollExcelExporter _exporter;
-    private readonly AttendanceSyncService _sync;
+    private readonly IAttendanceStore _store;
+    private readonly IWeeklyPayrollService _payroll;
+    private readonly IPayrollExporter _exporter;
+    private readonly IAttendanceSyncService _sync;
 
     public ReportViewModel(
-        AttendanceDb db,
-        WeeklyPayrollService payroll,
-        PayrollExcelExporter exporter,
-        AttendanceSyncService sync)
+        IAttendanceStore store,
+        IWeeklyPayrollService payroll,
+        IPayrollExporter exporter,
+        IAttendanceSyncService sync)
     {
-        _db = db;
+        _store = store;
         _payroll = payroll;
         _exporter = exporter;
         _sync = sync;
@@ -63,7 +63,7 @@ public partial class ReportViewModel : ViewModelBase
     {
         WeekStart = WeekRange.StartOfWeek(DateOnly.FromDateTime(WeekStartDate.LocalDateTime.Date));
         WeekStartDate = new DateTimeOffset(WeekStart.ToDateTime(TimeOnly.MinValue));
-        _report = _payroll.Build(WeekStart, _db.GetEmployees(), _db.GetRoles(), _db.GetPunches(), _db.GetSchedule());
+        _report = _payroll.Build(WeekStart, _store.GetEmployees(), _store.GetRoles(), _store.GetPunches(), _store.GetSchedule());
 
         Lines.Clear();
         foreach (var line in _report.Lines)
@@ -106,10 +106,7 @@ public partial class ReportViewModel : ViewModelBase
     {
         try
         {
-            var settings = _db.GetSettings();
-            var device = _sync.CreateDevice(settings);
-            var logs = await device.DownloadLogsAsync();
-            var count = _sync.Import(logs, settings.UseMockDevice ? PunchSource.Mock : PunchSource.Device);
+            var (device, count) = await _sync.DownloadConfiguredAsync(_store.GetSettings());
             Reload();
             Status = count == 0
                 ? $"Sin marcaciones nuevas desde {device.Name}."

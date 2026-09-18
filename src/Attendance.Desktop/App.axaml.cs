@@ -1,10 +1,4 @@
-using Attendance.Core;
-using Attendance.Core.Data;
-using Attendance.Core.Device;
-using Attendance.Core.Export;
-using Attendance.Core.Payroll;
 using Attendance.Desktop.ViewModels;
-using Attendance.Desktop.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -18,25 +12,11 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton(new AttendanceDb(AppPaths.DatabaseFile));
-        services.AddSingleton<AttendanceSyncService>();
-        services.AddSingleton<WeeklyPayrollService>();
-        services.AddSingleton<PayrollExcelExporter>();
-        services.AddSingleton<MainViewModel>();
-        services.AddSingleton<RolesViewModel>();
-        services.AddSingleton<EmployeesViewModel>();
-        services.AddSingleton<PunchesViewModel>();
-        services.AddSingleton<ReportViewModel>();
-        services.AddSingleton<DeviceViewModel>();
-        services.AddSingleton<ScheduleViewModel>();
-
-        var provider = services.BuildServiceProvider();
-        provider.GetRequiredService<AttendanceDb>().Initialize();
+        var provider = DesktopComposition.Build();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow
+            desktop.MainWindow = new Views.MainWindow
             {
                 DataContext = provider.GetRequiredService<MainViewModel>()
             };

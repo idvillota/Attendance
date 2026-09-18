@@ -72,7 +72,7 @@ public static class ShiftPairing
     }
 }
 
-public sealed class WeeklyPayrollService
+public sealed class WeeklyPayrollService : IWeeklyPayrollService
 {
     public WeeklyReport Build(
         DateOnly weekStart,

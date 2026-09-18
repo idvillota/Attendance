@@ -24,6 +24,13 @@ public enum RateBand
 
 public sealed class RoleRates
 {
+    public const decimal OrdinaryColombia2026 = 8338m;
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     public decimal OrdinaryDay { get; set; }
     public decimal OrdinaryNight { get; set; }
     public decimal SundayDay { get; set; }
@@ -77,7 +84,7 @@ public sealed class RoleRates
 
     public static RoleRates LegalColombia2026() => new()
     {
-        OrdinaryDay = 8338m,
+        OrdinaryDay = OrdinaryColombia2026,
         OrdinaryNight = 11256m,
         SundayDay = 15842m,
         SundayNight = 18760m,
@@ -98,7 +105,7 @@ public sealed class RoleRates
 
         try
         {
-            return JsonSerializer.Deserialize<RoleRates>(json) ?? FromOrdinary(fallbackOrdinary);
+            return JsonSerializer.Deserialize<RoleRates>(json, JsonOptions) ?? FromOrdinary(fallbackOrdinary);
         }
         catch (JsonException)
         {

@@ -1,4 +1,5 @@
 using Attendance.Core.Domain;
+using Attendance.Desktop.Services;
 using Attendance.Desktop.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -29,17 +30,7 @@ public partial class EmployeesView : UserControl
             return;
         }
 
-        if (TopLevel.GetTopLevel(this) is not Window owner)
-        {
-            return;
-        }
-
-        var dialog = new EmployeeEditorWindow
-        {
-            DataContext = vm.CreateEditor(employee)
-        };
-
-        if (await dialog.ShowDialog<bool>(owner))
+        if (await DesktopDialogs.ShowEditorAsync<EmployeeEditorWindow>(this, vm.CreateEditor(employee)))
         {
             vm.Reload();
         }

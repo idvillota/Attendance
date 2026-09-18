@@ -8,12 +8,12 @@ namespace Attendance.Desktop.ViewModels;
 
 public partial class RoleEditorViewModel : ViewModelBase
 {
-    private readonly AttendanceDb _db;
+    private readonly IAttendanceStore _store;
     private readonly long? _id;
 
-    public RoleEditorViewModel(AttendanceDb db, Role? role)
+    public RoleEditorViewModel(IAttendanceStore store, Role? role)
     {
-        _db = db;
+        _store = store;
         var rates = role?.Rates ?? RoleRates.LegalColombia2026();
         if (role is null)
         {
@@ -76,11 +76,11 @@ public partial class RoleEditorViewModel : ViewModelBase
 
         if (_id is null)
         {
-            _db.AddRole(FormName, rates);
+            _store.AddRole(FormName, rates);
         }
         else
         {
-            _db.UpdateRole(new Role
+            _store.UpdateRole(new Role
             {
                 Id = _id.Value,
                 Name = FormName,

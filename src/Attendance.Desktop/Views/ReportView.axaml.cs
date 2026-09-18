@@ -1,7 +1,7 @@
+using Attendance.Desktop.Services;
 using Attendance.Desktop.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Platform.Storage;
 
 namespace Attendance.Desktop.Views;
 
@@ -19,22 +19,16 @@ public partial class ReportView : UserControl
             return;
         }
 
-        var top = TopLevel.GetTopLevel(this);
-        if (top is null)
-        {
-            return;
-        }
+        var path = await DesktopDialogs.SaveFileAsync(
+            this,
+            "Exportar reporte semanal",
+            "nomina-semanal.xlsx",
+            "Excel",
+            "*.xlsx");
 
-        var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        if (path is not null)
         {
-            Title = "Exportar reporte semanal",
-            SuggestedFileName = "nomina-semanal.xlsx",
-            FileTypeChoices = [new FilePickerFileType("Excel") { Patterns = ["*.xlsx"] }]
-        });
-
-        if (file is not null)
-        {
-            vm.ExportTo(file.Path.LocalPath);
+            vm.ExportTo(path);
         }
     }
 }

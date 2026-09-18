@@ -1,65 +1,28 @@
-using System.Globalization;
 using Attendance.Core.Domain;
 using Microsoft.Data.Sqlite;
 
 namespace Attendance.Core.Data;
 
-public sealed class AttendanceDb
+public sealed class AttendanceDb : IAttendanceStore
 {
-    private readonly string _connectionString;
+    private readonly SqliteSession _session;
 
     public AttendanceDb(string filePath)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
-        _connectionString = new SqliteConnectionStringBuilder { DataSource = filePath }.ToString();
-        FilePath = filePath;
+        _session = new SqliteSession(filePath);
     }
 
-    public string FilePath { get; }
+    public string FilePath => _session.FilePath;
 
     public void Initialize()
     {
-        using var connection = Open();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = """
-            CREATE TABLE IF NOT EXISTS roles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                hourly_rate TEXT NOT NULL,
-                is_active INTEGER NOT NULL DEFAULT 1,
-                rates_json TEXT
-            );
-            CREATE TABLE IF NOT EXISTS employees (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                role_id INTEGER NOT NULL,
-                device_user_id TEXT NOT NULL UNIQUE,
-                is_active INTEGER NOT NULL DEFAULT 1,
-                FOREIGN KEY (role_id) REFERENCES roles(id)
-            );
-            CREATE TABLE IF NOT EXISTS punches (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                employee_id INTEGER NOT NULL,
-                punched_at TEXT NOT NULL,
-                direction TEXT NOT NULL,
-                source TEXT NOT NULL,
-                device_key TEXT UNIQUE,
-                FOREIGN KEY (employee_id) REFERENCES employees(id)
-            );
-            CREATE TABLE IF NOT EXISTS settings (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL
-            );
-            """;
-        cmd.ExecuteNonQuery();
-        EnsureRatesColumn(connection);
-        EnsureDemoRoster(connection);
-        BackfillRoleRates(connection);
+        using var connection = _session.Open();
+        SchemaMigrator.Apply(connection);
     }
 
     public IReadOnlyList<Role> GetRoles(bool activeOnly = false)
     {
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = activeOnly
             ? "SELECT id, name, hourly_rate, is_active, rates_json FROM roles WHERE is_active = 1 ORDER BY name"
@@ -69,8 +32,8 @@ public sealed class AttendanceDb
 
     public Role AddRole(string name, RoleRates? rates = null)
     {
-        rates ??= RoleRates.FromOrdinary(8338m);
-        using var connection = Open();
+        rates ??= RoleRates.FromOrdinary(RoleRates.OrdinaryColombia2026);
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
             INSERT INTO roles (name, hourly_rate, is_active, rates_json)
@@ -78,7 +41,7 @@ public sealed class AttendanceDb
             SELECT last_insert_rowid();
             """;
         cmd.Parameters.AddWithValue("$n", name.Trim());
-        cmd.Parameters.AddWithValue("$r", FormatDecimal(rates.OrdinaryDay));
+        cmd.Parameters.AddWithValue("$r", SqliteSession.FormatDecimal(rates.OrdinaryDay));
         cmd.Parameters.AddWithValue("$j", rates.ToJson());
         var id = (long)cmd.ExecuteScalar()!;
         return new Role { Id = id, Name = name.Trim(), Rates = rates, IsActive = true };
@@ -86,11 +49,11 @@ public sealed class AttendanceDb
 
     public void UpdateRole(Role role)
     {
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "UPDATE roles SET name = $n, hourly_rate = $r, is_active = $a, rates_json = $j WHERE id = $id";
         cmd.Parameters.AddWithValue("$n", role.Name.Trim());
-        cmd.Parameters.AddWithValue("$r", FormatDecimal(role.Rates.OrdinaryDay));
+        cmd.Parameters.AddWithValue("$r", SqliteSession.FormatDecimal(role.Rates.OrdinaryDay));
         cmd.Parameters.AddWithValue("$a", role.IsActive ? 1 : 0);
         cmd.Parameters.AddWithValue("$j", role.Rates.ToJson());
         cmd.Parameters.AddWithValue("$id", role.Id);
@@ -99,7 +62,7 @@ public sealed class AttendanceDb
 
     public IReadOnlyList<Employee> GetEmployees(bool activeOnly = false)
     {
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
             SELECT e.id, e.name, e.role_id, r.name, e.device_user_id, e.is_active
@@ -126,7 +89,7 @@ public sealed class AttendanceDb
 
     public Employee AddEmployee(string name, long roleId, string deviceUserId)
     {
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
             INSERT INTO employees (name, role_id, device_user_id, is_active)
@@ -142,7 +105,7 @@ public sealed class AttendanceDb
 
     public void UpdateEmployee(Employee employee)
     {
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
             UPDATE employees
@@ -159,7 +122,7 @@ public sealed class AttendanceDb
 
     public IReadOnlyList<Punch> GetPunches(DateTime? from = null, DateTime? toExclusive = null)
     {
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
             SELECT p.id, p.employee_id, e.name, p.punched_at, p.direction, p.source, p.device_key
@@ -169,8 +132,8 @@ public sealed class AttendanceDb
               AND ($to IS NULL OR p.punched_at < $to)
             ORDER BY p.punched_at DESC, p.id DESC
             """;
-        cmd.Parameters.AddWithValue("$from", from is null ? DBNull.Value : FormatTime(from.Value));
-        cmd.Parameters.AddWithValue("$to", toExclusive is null ? DBNull.Value : FormatTime(toExclusive.Value));
+        cmd.Parameters.AddWithValue("$from", from is null ? DBNull.Value : SqliteSession.FormatTime(from.Value));
+        cmd.Parameters.AddWithValue("$to", toExclusive is null ? DBNull.Value : SqliteSession.FormatTime(toExclusive.Value));
         using var reader = cmd.ExecuteReader();
         var list = new List<Punch>();
         while (reader.Read())
@@ -180,7 +143,7 @@ public sealed class AttendanceDb
                 Id = reader.GetInt64(0),
                 EmployeeId = reader.GetInt64(1),
                 EmployeeName = reader.GetString(2),
-                PunchedAt = DateTime.Parse(reader.GetString(3), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                PunchedAt = DateTime.Parse(reader.GetString(3), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind),
                 Direction = Enum.Parse<PunchDirection>(reader.GetString(4)),
                 Source = Enum.Parse<PunchSource>(reader.GetString(5)),
                 DeviceKey = reader.IsDBNull(6) ? null : reader.GetString(6)
@@ -192,7 +155,7 @@ public sealed class AttendanceDb
 
     public Punch AddPunch(long employeeId, DateTime punchedAt, PunchDirection direction, PunchSource source, string? deviceKey = null)
     {
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
             INSERT INTO punches (employee_id, punched_at, direction, source, device_key)
@@ -200,7 +163,7 @@ public sealed class AttendanceDb
             SELECT last_insert_rowid();
             """;
         cmd.Parameters.AddWithValue("$e", employeeId);
-        cmd.Parameters.AddWithValue("$t", FormatTime(punchedAt));
+        cmd.Parameters.AddWithValue("$t", SqliteSession.FormatTime(punchedAt));
         cmd.Parameters.AddWithValue("$d", direction.ToString());
         cmd.Parameters.AddWithValue("$s", source.ToString());
         cmd.Parameters.AddWithValue("$k", (object?)deviceKey ?? DBNull.Value);
@@ -210,7 +173,7 @@ public sealed class AttendanceDb
 
     public int TryAddPunch(long employeeId, DateTime punchedAt, PunchDirection direction, PunchSource source, string? deviceKey)
     {
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
             INSERT OR IGNORE INTO punches (employee_id, punched_at, direction, source, device_key)
@@ -218,7 +181,7 @@ public sealed class AttendanceDb
             SELECT changes();
             """;
         cmd.Parameters.AddWithValue("$e", employeeId);
-        cmd.Parameters.AddWithValue("$t", FormatTime(punchedAt));
+        cmd.Parameters.AddWithValue("$t", SqliteSession.FormatTime(punchedAt));
         cmd.Parameters.AddWithValue("$d", direction.ToString());
         cmd.Parameters.AddWithValue("$s", source.ToString());
         cmd.Parameters.AddWithValue("$k", (object?)deviceKey ?? DBNull.Value);
@@ -227,7 +190,7 @@ public sealed class AttendanceDb
 
     public void DeletePunch(long id)
     {
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "DELETE FROM punches WHERE id = $id";
         cmd.Parameters.AddWithValue("$id", id);
@@ -236,8 +199,39 @@ public sealed class AttendanceDb
 
     public AppSettings GetSettings()
     {
+        var map = ReadSettingsMap();
+        return new AppSettings
+        {
+            UseMockDevice = SqliteSession.GetBool(map, "use_mock_device", true),
+            DeviceIp = SqliteSession.GetString(map, "device_ip", "192.168.1.201"),
+            DevicePort = SqliteSession.GetInt(map, "device_port", 4370),
+            DeviceNumber = SqliteSession.GetInt(map, "device_number", 1),
+            Schedule = ScheduleSettingsMapper.FromMap(map)
+        };
+    }
+
+    public void SaveSettings(AppSettings settings)
+    {
+        UpsertSetting("use_mock_device", settings.UseMockDevice ? "1" : "0");
+        UpsertSetting("device_ip", settings.DeviceIp.Trim());
+        UpsertSetting("device_port", settings.DevicePort.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        UpsertSetting("device_number", settings.DeviceNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    public TenantSchedule GetSchedule() => GetSettings().Schedule;
+
+    public void SaveSchedule(TenantSchedule schedule)
+    {
+        foreach (var (key, value) in ScheduleSettingsMapper.ToMap(schedule))
+        {
+            UpsertSetting(key, value);
+        }
+    }
+
+    private Dictionary<string, string> ReadSettingsMap()
+    {
         var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT key, value FROM settings";
         using var reader = cmd.ExecuteReader();
@@ -246,89 +240,12 @@ public sealed class AttendanceDb
             map[reader.GetString(0)] = reader.GetString(1);
         }
 
-        return new AppSettings
-        {
-            UseMockDevice = GetBool(map, "use_mock_device", true),
-            DeviceIp = GetString(map, "device_ip", "192.168.1.201"),
-            DevicePort = GetInt(map, "device_port", 4370),
-            DeviceNumber = GetInt(map, "device_number", 1),
-            Schedule = ReadSchedule(map)
-        };
-    }
-
-    public void SaveSettings(AppSettings settings)
-    {
-        UpsertSetting("use_mock_device", settings.UseMockDevice ? "1" : "0");
-        UpsertSetting("device_ip", settings.DeviceIp.Trim());
-        UpsertSetting("device_port", settings.DevicePort.ToString(CultureInfo.InvariantCulture));
-        UpsertSetting("device_number", settings.DeviceNumber.ToString(CultureInfo.InvariantCulture));
-    }
-
-    public TenantSchedule GetSchedule() => GetSettings().Schedule;
-
-    public void SaveSchedule(TenantSchedule schedule)
-    {
-        UpsertSetting("night_start", schedule.NightStart.ToString("HH:mm", CultureInfo.InvariantCulture));
-        UpsertSetting("night_end", schedule.NightEnd.ToString("HH:mm", CultureInfo.InvariantCulture));
-        UpsertSetting("extra_after_hours", schedule.ExtraAfterHours.ToString(CultureInfo.InvariantCulture));
-        UpsertSetting("schedule_cells", string.Join(",", schedule.Cells.Select(c => ((int)c).ToString(CultureInfo.InvariantCulture))));
-        UpsertSetting("holidays", string.Join(",", schedule.Holidays.Select(d => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))));
-    }
-
-    private static TenantSchedule ReadSchedule(IReadOnlyDictionary<string, string> map)
-    {
-        var schedule = TenantSchedule.Default();
-        if (TimeOnly.TryParse(GetString(map, "night_start", "19:00"), out var nightStart))
-        {
-            schedule.NightStart = nightStart;
-        }
-
-        if (TimeOnly.TryParse(GetString(map, "night_end", "06:00"), out var nightEnd))
-        {
-            schedule.NightEnd = nightEnd;
-        }
-
-        if (decimal.TryParse(GetString(map, "extra_after_hours", "8"), CultureInfo.InvariantCulture, out var extra))
-        {
-            schedule.ExtraAfterHours = extra;
-        }
-
-        var cells = GetString(map, "schedule_cells", "");
-        if (!string.IsNullOrWhiteSpace(cells))
-        {
-            var parsed = cells.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(v => Enum.IsDefined(typeof(CalendarBand), int.Parse(v, CultureInfo.InvariantCulture))
-                    ? (CalendarBand)int.Parse(v, CultureInfo.InvariantCulture)
-                    : CalendarBand.OrdinaryDay)
-                .ToArray();
-            if (parsed.Length == TenantSchedule.CellCount)
-            {
-                schedule.Cells = parsed;
-            }
-        }
-        else
-        {
-            schedule.PaintFromNightWindow();
-        }
-
-        var holidays = GetString(map, "holidays", "");
-        if (!string.IsNullOrWhiteSpace(holidays))
-        {
-            foreach (var token in holidays.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            {
-                if (DateOnly.TryParse(token, out var date))
-                {
-                    schedule.Holidays.Add(date);
-                }
-            }
-        }
-
-        return schedule;
+        return map;
     }
 
     private void UpsertSetting(string key, string value)
     {
-        using var connection = Open();
+        using var connection = _session.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
             INSERT INTO settings (key, value) VALUES ($k, $v)
@@ -337,203 +254,6 @@ public sealed class AttendanceDb
         cmd.Parameters.AddWithValue("$k", key);
         cmd.Parameters.AddWithValue("$v", value);
         cmd.ExecuteNonQuery();
-    }
-
-    private SqliteConnection Open()
-    {
-        var connection = new SqliteConnection(_connectionString);
-        connection.Open();
-        using var pragma = connection.CreateCommand();
-        pragma.CommandText = "PRAGMA foreign_keys = ON;";
-        pragma.ExecuteNonQuery();
-        return connection;
-    }
-
-    private static void EnsureDemoRoster(SqliteConnection connection)
-    {
-        var mesero = EnsureRole(connection, "Mesero", "8000");
-        var cocinero = EnsureRole(connection, "Cocinero", "10000");
-        var cajero = EnsureRole(connection, "Cajero", "9000");
-        var auxiliar = EnsureRole(connection, "Auxiliar", "7500");
-
-        var ana = EnsureEmployee(connection, "Ana Pérez", mesero, "1");
-        var carlos = EnsureEmployee(connection, "Carlos Gómez", cocinero, "2");
-        var lucia = EnsureEmployee(connection, "Lucía Rojas", cajero, "3");
-        var diego = EnsureEmployee(connection, "Diego Martínez", mesero, "4");
-        var sofia = EnsureEmployee(connection, "Sofía Herrera", auxiliar, "5");
-
-        SeedWeekIfEmpty(connection, ana, leaveFridayOpen: false);
-        SeedWeekIfEmpty(connection, carlos, leaveFridayOpen: false);
-        SeedWeekIfEmpty(connection, lucia, leaveFridayOpen: false);
-        SeedWeekIfEmpty(connection, diego, leaveFridayOpen: false);
-        SeedWeekIfEmpty(connection, sofia, leaveFridayOpen: true);
-    }
-
-    private static long EnsureRole(SqliteConnection connection, string name, string hourlyRate)
-    {
-        using var lookup = connection.CreateCommand();
-        lookup.CommandText = "SELECT id FROM roles WHERE name = $n LIMIT 1";
-        lookup.Parameters.AddWithValue("$n", name);
-        var existing = lookup.ExecuteScalar();
-        if (existing is not null)
-        {
-            return Convert.ToInt64(existing);
-        }
-
-        using var insert = connection.CreateCommand();
-        insert.CommandText = """
-            INSERT INTO roles (name, hourly_rate, is_active, rates_json)
-            VALUES ($n, $r, 1, $j);
-            SELECT last_insert_rowid();
-            """;
-        var rates = RoleRates.FromOrdinary(decimal.Parse(hourlyRate, CultureInfo.InvariantCulture));
-        insert.Parameters.AddWithValue("$n", name);
-        insert.Parameters.AddWithValue("$r", hourlyRate);
-        insert.Parameters.AddWithValue("$j", rates.ToJson());
-        return (long)insert.ExecuteScalar()!;
-    }
-
-    private static long EnsureEmployee(SqliteConnection connection, string name, long roleId, string deviceUserId)
-    {
-        using var lookup = connection.CreateCommand();
-        lookup.CommandText = "SELECT id FROM employees WHERE device_user_id = $d LIMIT 1";
-        lookup.Parameters.AddWithValue("$d", deviceUserId);
-        var existing = lookup.ExecuteScalar();
-        if (existing is not null)
-        {
-            return Convert.ToInt64(existing);
-        }
-
-        using var insert = connection.CreateCommand();
-        insert.CommandText = """
-            INSERT INTO employees (name, role_id, device_user_id, is_active)
-            VALUES ($n, $r, $d, 1);
-            SELECT last_insert_rowid();
-            """;
-        insert.Parameters.AddWithValue("$n", name);
-        insert.Parameters.AddWithValue("$r", roleId);
-        insert.Parameters.AddWithValue("$d", deviceUserId);
-        return (long)insert.ExecuteScalar()!;
-    }
-
-    private static void SeedWeekIfEmpty(SqliteConnection connection, long employeeId, bool leaveFridayOpen)
-    {
-        using var count = connection.CreateCommand();
-        count.CommandText = "SELECT COUNT(*) FROM punches WHERE employee_id = $e";
-        count.Parameters.AddWithValue("$e", employeeId);
-        if (Convert.ToInt32(count.ExecuteScalar()) > 0)
-        {
-            return;
-        }
-
-        using var punch = connection.CreateCommand();
-        punch.CommandText = """
-            INSERT INTO punches (employee_id, punched_at, direction, source, device_key)
-            VALUES ($e, $t, $d, 'Mock', $k)
-            """;
-        var pE = punch.Parameters.Add("$e", SqliteType.Integer);
-        var pT = punch.Parameters.Add("$t", SqliteType.Text);
-        var pD = punch.Parameters.Add("$d", SqliteType.Text);
-        var pK = punch.Parameters.Add("$k", SqliteType.Text);
-
-        var monday = WeekStart(DateOnly.FromDateTime(DateTime.Now));
-        for (var day = 0; day < 5; day++)
-        {
-            var date = monday.AddDays(day);
-            var clockIn = date.ToDateTime(new TimeOnly(8, 0)).AddMinutes(employeeId * 3);
-            InsertPunch(punch, pE, pT, pD, pK, employeeId, clockIn, "In");
-            if (leaveFridayOpen && day == 4)
-            {
-                continue;
-            }
-
-            var clockOut = date.ToDateTime(new TimeOnly(16, 0)).AddMinutes(employeeId * -2);
-            InsertPunch(punch, pE, pT, pD, pK, employeeId, clockOut, "Out");
-        }
-
-        var sunday = monday.AddDays(6);
-        var sundayIn = sunday.ToDateTime(new TimeOnly(20, 0));
-        var sundayOut = sunday.ToDateTime(new TimeOnly(21, 0));
-        InsertPunch(punch, pE, pT, pD, pK, employeeId, sundayIn, "In");
-        InsertPunch(punch, pE, pT, pD, pK, employeeId, sundayOut, "Out");
-    }
-
-    private static void EnsureRatesColumn(SqliteConnection connection)
-    {
-        var hasRates = false;
-        using (var info = connection.CreateCommand())
-        {
-            info.CommandText = "PRAGMA table_info(roles)";
-            using var reader = info.ExecuteReader();
-            while (reader.Read())
-            {
-                if (string.Equals(reader.GetString(1), "rates_json", StringComparison.OrdinalIgnoreCase))
-                {
-                    hasRates = true;
-                    break;
-                }
-            }
-        }
-
-        if (hasRates)
-        {
-            return;
-        }
-
-        using var alter = connection.CreateCommand();
-        alter.CommandText = "ALTER TABLE roles ADD COLUMN rates_json TEXT";
-        alter.ExecuteNonQuery();
-    }
-
-    private static void BackfillRoleRates(SqliteConnection connection)
-    {
-        using var select = connection.CreateCommand();
-        select.CommandText = "SELECT id, hourly_rate, rates_json FROM roles";
-        using var reader = select.ExecuteReader();
-        var updates = new List<(long Id, string Json)>();
-        while (reader.Read())
-        {
-            if (!reader.IsDBNull(2) && !string.IsNullOrWhiteSpace(reader.GetString(2)))
-            {
-                continue;
-            }
-
-            var ordinary = ParseDecimal(reader.GetString(1));
-            updates.Add((reader.GetInt64(0), RoleRates.FromOrdinary(ordinary).ToJson()));
-        }
-
-        reader.Close();
-        foreach (var (id, json) in updates)
-        {
-            using var update = connection.CreateCommand();
-            update.CommandText = "UPDATE roles SET rates_json = $j WHERE id = $id";
-            update.Parameters.AddWithValue("$j", json);
-            update.Parameters.AddWithValue("$id", id);
-            update.ExecuteNonQuery();
-        }
-    }
-
-    private static void InsertPunch(
-        SqliteCommand punch,
-        SqliteParameter pE,
-        SqliteParameter pT,
-        SqliteParameter pD,
-        SqliteParameter pK,
-        long employeeId,
-        DateTime at,
-        string direction)
-    {
-        pE.Value = employeeId;
-        pT.Value = FormatTime(at);
-        pD.Value = direction;
-        pK.Value = $"seed:{employeeId}:{FormatTime(at)}";
-        punch.ExecuteNonQuery();
-    }
-
-    private static DateOnly WeekStart(DateOnly date)
-    {
-        var offset = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-        return date.AddDays(-offset);
     }
 
     private static List<Role> ReadRoles(SqliteCommand cmd)
@@ -547,25 +267,10 @@ public sealed class AttendanceDb
                 Id = reader.GetInt64(0),
                 Name = reader.GetString(1),
                 IsActive = reader.GetInt32(3) == 1,
-                Rates = RoleRates.FromJson(reader.IsDBNull(4) ? null : reader.GetString(4), ParseDecimal(reader.GetString(2)))
+                Rates = RoleRates.FromJson(reader.IsDBNull(4) ? null : reader.GetString(4), SqliteSession.ParseDecimal(reader.GetString(2)))
             });
         }
 
         return list;
     }
-
-    private static string FormatDecimal(decimal value) => value.ToString(CultureInfo.InvariantCulture);
-
-    private static decimal ParseDecimal(string value) => decimal.Parse(value, CultureInfo.InvariantCulture);
-
-    private static string FormatTime(DateTime value) => value.ToString("o", CultureInfo.InvariantCulture);
-
-    private static bool GetBool(IReadOnlyDictionary<string, string> map, string key, bool fallback)
-        => map.TryGetValue(key, out var value) ? value is "1" or "true" : fallback;
-
-    private static int GetInt(IReadOnlyDictionary<string, string> map, string key, int fallback)
-        => map.TryGetValue(key, out var value) && int.TryParse(value, out var parsed) ? parsed : fallback;
-
-    private static string GetString(IReadOnlyDictionary<string, string> map, string key, string fallback)
-        => map.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : fallback;
 }

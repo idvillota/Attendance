@@ -10,11 +10,11 @@ namespace Attendance.Desktop.ViewModels;
 
 public partial class ScheduleViewModel : ViewModelBase
 {
-    private readonly AttendanceDb _db;
+    private readonly IAttendanceStore _store;
 
-    public ScheduleViewModel(AttendanceDb db)
+    public ScheduleViewModel(IAttendanceStore store)
     {
-        _db = db;
+        _store = store;
         Reload();
     }
 
@@ -30,7 +30,7 @@ public partial class ScheduleViewModel : ViewModelBase
 
     public void Reload()
     {
-        var schedule = _db.GetSchedule();
+        var schedule = _store.GetSchedule();
         NightStartText = schedule.NightStart.ToString("HH:mm", CultureInfo.InvariantCulture);
         NightEndText = schedule.NightEnd.ToString("HH:mm", CultureInfo.InvariantCulture);
         ExtraAfterText = schedule.ExtraAfterHours.ToString("0.##", CultureInfo.InvariantCulture);
@@ -80,7 +80,7 @@ public partial class ScheduleViewModel : ViewModelBase
             }
         }
 
-        _db.SaveSchedule(schedule);
+        _store.SaveSchedule(schedule);
         Status = "Horario guardado. El reporte semanal ya usa estas franjas.";
     }
 

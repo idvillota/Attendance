@@ -1,4 +1,5 @@
 using Attendance.Core.Domain;
+using Attendance.Desktop.Services;
 using Attendance.Desktop.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -24,13 +25,12 @@ public partial class RolesView : UserControl
 
     private async Task OpenEditor(Role? role)
     {
-        if (DataContext is not RolesViewModel vm || TopLevel.GetTopLevel(this) is not Window owner)
+        if (DataContext is not RolesViewModel vm)
         {
             return;
         }
 
-        var dialog = new RoleEditorWindow { DataContext = vm.CreateEditor(role) };
-        if (await dialog.ShowDialog<bool>(owner))
+        if (await DesktopDialogs.ShowEditorAsync<RoleEditorWindow>(this, vm.CreateEditor(role)))
         {
             vm.Reload();
         }

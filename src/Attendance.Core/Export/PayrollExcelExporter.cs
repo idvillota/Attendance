@@ -4,7 +4,7 @@ using ClosedXML.Excel;
 
 namespace Attendance.Core.Export;
 
-public sealed class PayrollExcelExporter
+public sealed class PayrollExcelExporter : IPayrollExporter
 {
     public void Export(WeeklyReport report, string path)
     {

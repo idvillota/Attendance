@@ -6,22 +6,22 @@ namespace Attendance.Desktop.ViewModels;
 
 public partial class EmployeesViewModel : ViewModelBase
 {
-    private readonly AttendanceDb _db;
+    private readonly IAttendanceStore _store;
 
-    public EmployeesViewModel(AttendanceDb db)
+    public EmployeesViewModel(IAttendanceStore store)
     {
-        _db = db;
+        _store = store;
         Reload();
     }
 
     public ObservableCollection<Employee> Employees { get; } = [];
 
-    public EmployeeEditorViewModel CreateEditor(Employee? employee) => new(_db, employee);
+    public EmployeeEditorViewModel CreateEditor(Employee? employee) => new(_store, employee);
 
     public void Reload()
     {
         Employees.Clear();
-        foreach (var employee in _db.GetEmployees())
+        foreach (var employee in _store.GetEmployees())
         {
             Employees.Add(employee);
         }

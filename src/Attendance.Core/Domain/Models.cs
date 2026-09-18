@@ -20,7 +20,7 @@ public sealed class Role
     public long Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
-    public RoleRates Rates { get; set; } = RoleRates.FromOrdinary(8338m);
+    public RoleRates Rates { get; set; } = RoleRates.FromOrdinary(RoleRates.OrdinaryColombia2026);
     public decimal HourlyRate
     {
         get => Rates.OrdinaryDay;
