@@ -1,3 +1,4 @@
+using Attendance.Core.Auth;
 using Attendance.Desktop.ViewModels;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -16,10 +17,7 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new Views.MainWindow
-            {
-                DataContext = provider.GetRequiredService<MainViewModel>()
-            };
+            provider.GetRequiredService<DesktopShell>().Start(desktop);
         }
 
         base.OnFrameworkInitializationCompleted();

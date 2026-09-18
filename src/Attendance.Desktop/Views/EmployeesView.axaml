@@ -9,7 +9,8 @@
                     Content="Nueva persona"
                     Classes="accent"
                     Click="AddClick"
-                    VerticalAlignment="Top"/>
+                    VerticalAlignment="Top"
+                    IsVisible="{Binding CanManagePeople}"/>
             <StackPanel Spacing="8" Margin="0,0,16,0">
                 <TextBlock Classes="muted" TextWrapping="Wrap"
                            Text="Directorio del restaurante. Las personas marcan en el K30; aquí solo se edita quién es quién."/>
@@ -52,7 +53,8 @@
                                     Content="Editar"
                                     Classes="ghost"
                                     VerticalAlignment="Center"
-                                    Click="EditClick"/>
+                                    Click="EditClick"
+                                    IsVisible="{Binding CanEdit}"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

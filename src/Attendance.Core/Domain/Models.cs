@@ -93,6 +93,49 @@ public sealed class AppSettings
     public TenantSchedule Schedule { get; set; } = TenantSchedule.Default();
 }
 
+public enum AppRole
+{
+    Admin,
+    Basic
+}
+
+public sealed class AppUser
+{
+    public long Id { get; init; }
+    public string Username { get; init; } = string.Empty;
+    public AppRole Role { get; init; }
+    public long? EmployeeId { get; init; }
+    public string? EmployeeName { get; init; }
+    public bool IsActive { get; init; } = true;
+    public bool IsAdmin => Role == AppRole.Admin;
+    public string RoleLabel => IsAdmin ? "Administrador" : "Básico";
+    public string Subtitle =>
+        IsAdmin
+            ? RoleLabel
+            : $"{RoleLabel} · {EmployeeName ?? "Sin persona"}";
+}
+
+public sealed class StoredUser
+{
+    public long Id { get; init; }
+    public string Username { get; init; } = string.Empty;
+    public string PasswordHash { get; init; } = string.Empty;
+    public AppRole Role { get; init; }
+    public long? EmployeeId { get; init; }
+    public string? EmployeeName { get; init; }
+    public bool IsActive { get; init; } = true;
+
+    public AppUser ToAppUser() => new()
+    {
+        Id = Id,
+        Username = Username,
+        Role = Role,
+        EmployeeId = EmployeeId,
+        EmployeeName = EmployeeName,
+        IsActive = IsActive
+    };
+}
+
 public sealed class WeeklyReportLine
 {
     public long EmployeeId { get; set; }

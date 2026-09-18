@@ -30,6 +30,11 @@ public partial class EmployeesView : UserControl
             return;
         }
 
+        if (!vm.CanManagePeople)
+        {
+            return;
+        }
+
         if (await DesktopDialogs.ShowEditorAsync<EmployeeEditorWindow>(this, vm.CreateEditor(employee)))
         {
             vm.Reload();

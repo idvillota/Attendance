@@ -9,7 +9,7 @@ cd apps/Attendance
 dotnet run --project src/Attendance.Desktop
 ```
 
-Use **Reloj K30 → Usar simulador**. Demo employees and a week of punches are created on first launch.
+Use **Reloj K30 → Usar simulador**. Demo employees and a week of punches are created on first launch. The first screen asks you to **create an administrator**. That account sees everyone; a **básico** account (Usuarios) is linked to one person and only sees their week and punches.
 
 ## Restaurant PC (Windows)
 

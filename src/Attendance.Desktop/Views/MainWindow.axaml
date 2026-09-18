@@ -30,6 +30,9 @@
         <DataTemplate DataType="vm:ScheduleViewModel">
             <views:ScheduleView />
         </DataTemplate>
+        <DataTemplate DataType="vm:UsersViewModel">
+            <views:UsersView />
+        </DataTemplate>
     </Window.DataTemplates>
 
     <Grid ColumnDefinitions="236,*">
@@ -38,6 +41,16 @@
                 <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="8,0,8,28">
                     <TextBlock Text="Host Asistencia" FontSize="20" FontWeight="SemiBold" Foreground="White"/>
                     <TextBlock Text="Nómina semanal · K30" Foreground="#98A2B3" FontSize="12"/>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="8,16,8,0">
+                    <TextBlock Text="{Binding UserLabel}" Foreground="White" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding RoleLabel}" Foreground="#98A2B3" FontSize="12"/>
+                    <Button Content="Cerrar sesión"
+                            Command="{Binding LogoutCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Background="#1D2939"
+                            Foreground="#D0D5DD"/>
                 </StackPanel>
                 <ListBox Classes="nav"
                          ItemsSource="{Binding NavItems}"

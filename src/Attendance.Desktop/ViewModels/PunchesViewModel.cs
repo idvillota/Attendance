@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Attendance.Core.Auth;
 using Attendance.Core.Data;
 using Attendance.Core.Domain;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -9,16 +10,24 @@ namespace Attendance.Desktop.ViewModels;
 public partial class PunchesViewModel : ViewModelBase
 {
     private readonly IAttendanceStore _store;
+    private readonly IAuthSession _session;
 
-    public PunchesViewModel(IAttendanceStore store)
+    public PunchesViewModel(IAttendanceStore store, IAuthSession session)
     {
         _store = store;
+        _session = session;
+        CanEditPunches = session.IsAdmin;
+        IntroText = session.IsAdmin
+            ? "Use esta pantalla solo para corregir una entrada o salida que el K30 no trajo bien. No es el reloj: las personas marcan en el dispositivo."
+            : "Sus marcaciones según lo descargado en este PC. Si falta una, pídale al administrador que la corrija.";
         Direction = Directions[0];
         Reload();
     }
 
     public ObservableCollection<Punch> Punches { get; } = [];
     public ObservableCollection<Employee> Employees { get; } = [];
+    public bool CanEditPunches { get; }
+    public string IntroText { get; }
     public DirectionChoice[] Directions { get; } =
     [
         new(PunchDirection.In, "Entrada"),
@@ -60,6 +69,10 @@ public partial class PunchesViewModel : ViewModelBase
     [RelayCommand]
     private void Add()
     {
+        if (!_session.IsAdmin)
+        {
+            return;
+        }
         if (SelectedEmployee is null)
         {
             Status = "Seleccione un empleado.";
@@ -78,7 +91,7 @@ public partial class PunchesViewModel : ViewModelBase
     [RelayCommand]
     private void Delete()
     {
-        if (Selected is null)
+        if (!_session.IsAdmin || Selected is null)
         {
             return;
         }

@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Attendance.Desktop.ViewModels"
+             xmlns:domain="using:Attendance.Core.Domain"
+             x:Class="Attendance.Desktop.Views.UsersView"
+             x:DataType="vm:UsersViewModel">
+    <Grid RowDefinitions="Auto,*" RowSpacing="16">
+        <DockPanel>
+            <Button DockPanel.Dock="Right"
+                    Content="Nueva cuenta"
+                    Classes="accent"
+                    Click="AddClick"
+                    VerticalAlignment="Top"/>
+            <TextBlock Classes="muted" TextWrapping="Wrap" Margin="0,0,16,0"
+                       Text="El administrador ve toda la nómina. Una cuenta básica solo ve a la persona ligada (horas, pago y marcaciones)."/>
+        </DockPanel>
+
+        <Border Grid.Row="1" Classes="card" Padding="8,4">
+            <ListBox ItemsSource="{Binding Users}" Background="Transparent" BorderThickness="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="domain:AppUser">
+                        <Grid ColumnDefinitions="*,Auto" Margin="8,10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding Username}" FontSize="15" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Subtitle}" Classes="muted"/>
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Content="Editar"
+                                    Classes="ghost"
+                                    VerticalAlignment="Center"
+                                    Click="EditClick"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+    </Grid>
+</UserControl>

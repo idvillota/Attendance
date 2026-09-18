@@ -24,6 +24,7 @@ public sealed class EmployeePresenceItem
     public string Name => Status.Name;
     public string Subtitle => Employee?.Subtitle ?? Status.RoleName;
     public string PresenceLabel => Status.Label;
+    public bool CanEdit { get; init; }
 
     private static IBrush Brush(string hex) => new SolidColorBrush(Color.Parse(hex));
 }

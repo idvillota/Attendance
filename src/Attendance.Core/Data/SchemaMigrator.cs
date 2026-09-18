@@ -37,6 +37,15 @@ internal static class SchemaMigrator
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                password_hash TEXT NOT NULL,
+                app_role TEXT NOT NULL,
+                employee_id INTEGER,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                FOREIGN KEY (employee_id) REFERENCES employees(id)
+            );
             """;
         cmd.ExecuteNonQuery();
         EnsureRatesColumn(connection);

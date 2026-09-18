@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Attendance.Core.Auth;
 using Attendance.Core.Data;
 using Attendance.Core.Domain;
 using Attendance.Core.Payroll;
@@ -9,10 +10,12 @@ namespace Attendance.Desktop.ViewModels;
 public partial class EmployeesViewModel : ViewModelBase
 {
     private readonly IAttendanceStore _store;
+    public bool CanManagePeople { get; }
 
-    public EmployeesViewModel(IAttendanceStore store)
+    public EmployeesViewModel(IAttendanceStore store, IAuthSession session)
     {
         _store = store;
+        CanManagePeople = session.IsAdmin;
         Reload();
     }
 
@@ -31,7 +34,7 @@ public partial class EmployeesViewModel : ViewModelBase
         foreach (var status in Presence.Snapshot(people, _store.GetPunches()))
         {
             byId.TryGetValue(status.EmployeeId, out var employee);
-            Employees.Add(new EmployeePresenceItem(status, employee));
+            Employees.Add(new EmployeePresenceItem(status, employee) { CanEdit = CanManagePeople });
         }
 
         Freshness = PresenceStatus.Freshness(_store.GetSettings().LastDownloadAt);

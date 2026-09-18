@@ -1,9 +1,10 @@
+using Attendance.Core.Auth;
 using Attendance.Core.Domain;
 using Microsoft.Data.Sqlite;
 
 namespace Attendance.Core.Data;
 
-public sealed class AttendanceDb : IAttendanceStore
+public sealed class AttendanceDb : IAttendanceStore, IUserStore
 {
     private readonly SqliteSession _session;
 
@@ -273,6 +274,131 @@ public sealed class AttendanceDb : IAttendanceStore
                 Name = reader.GetString(1),
                 IsActive = reader.GetInt32(3) == 1,
                 Rates = RoleRates.FromJson(reader.IsDBNull(4) ? null : reader.GetString(4), SqliteSession.ParseDecimal(reader.GetString(2)))
+            });
+        }
+
+        return list;
+    }
+
+    public int CountUsers()
+    {
+        using var connection = _session.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM users";
+        return Convert.ToInt32(cmd.ExecuteScalar());
+    }
+
+    public int CountActiveAdmins()
+    {
+        using var connection = _session.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM users WHERE app_role = 'Admin' AND is_active = 1";
+        return Convert.ToInt32(cmd.ExecuteScalar());
+    }
+
+    public IReadOnlyList<AppUser> GetUsers()
+    {
+        using var connection = _session.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT u.id, u.username, u.password_hash, u.app_role, u.employee_id, e.name, u.is_active
+            FROM users u
+            LEFT JOIN employees e ON e.id = u.employee_id
+            ORDER BY u.username
+            """;
+        return ReadStoredUsers(cmd).Select(user => user.ToAppUser()).ToList();
+    }
+
+    public StoredUser? FindByUsername(string username)
+    {
+        using var connection = _session.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT u.id, u.username, u.password_hash, u.app_role, u.employee_id, e.name, u.is_active
+            FROM users u
+            LEFT JOIN employees e ON e.id = u.employee_id
+            WHERE u.username = $u
+            LIMIT 1
+            """;
+        cmd.Parameters.AddWithValue("$u", username.Trim());
+        return ReadStoredUsers(cmd).FirstOrDefault();
+    }
+
+    public StoredUser? GetStoredUser(long id)
+    {
+        using var connection = _session.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT u.id, u.username, u.password_hash, u.app_role, u.employee_id, e.name, u.is_active
+            FROM users u
+            LEFT JOIN employees e ON e.id = u.employee_id
+            WHERE u.id = $id
+            LIMIT 1
+            """;
+        cmd.Parameters.AddWithValue("$id", id);
+        return ReadStoredUsers(cmd).FirstOrDefault();
+    }
+
+    public AppUser AddUser(string username, string passwordHash, AppRole role, long? employeeId)
+    {
+        using var connection = _session.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO users (username, password_hash, app_role, employee_id, is_active)
+            VALUES ($u, $p, $r, $e, 1);
+            SELECT last_insert_rowid();
+            """;
+        cmd.Parameters.AddWithValue("$u", username.Trim());
+        cmd.Parameters.AddWithValue("$p", passwordHash);
+        cmd.Parameters.AddWithValue("$r", role.ToString());
+        cmd.Parameters.AddWithValue("$e", (object?)employeeId ?? DBNull.Value);
+        var id = (long)cmd.ExecuteScalar()!;
+        return GetStoredUser(id)!.ToAppUser();
+    }
+
+    public void UpdateUser(long id, string username, string? passwordHash, AppRole role, long? employeeId, bool isActive)
+    {
+        using var connection = _session.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = passwordHash is null
+            ? """
+                UPDATE users
+                SET username = $u, app_role = $r, employee_id = $e, is_active = $a
+                WHERE id = $id
+                """
+            : """
+                UPDATE users
+                SET username = $u, password_hash = $p, app_role = $r, employee_id = $e, is_active = $a
+                WHERE id = $id
+                """;
+        cmd.Parameters.AddWithValue("$u", username.Trim());
+        cmd.Parameters.AddWithValue("$r", role.ToString());
+        cmd.Parameters.AddWithValue("$e", (object?)employeeId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$a", isActive ? 1 : 0);
+        cmd.Parameters.AddWithValue("$id", id);
+        if (passwordHash is not null)
+        {
+            cmd.Parameters.AddWithValue("$p", passwordHash);
+        }
+
+        cmd.ExecuteNonQuery();
+    }
+
+    private static List<StoredUser> ReadStoredUsers(SqliteCommand cmd)
+    {
+        using var reader = cmd.ExecuteReader();
+        var list = new List<StoredUser>();
+        while (reader.Read())
+        {
+            list.Add(new StoredUser
+            {
+                Id = reader.GetInt64(0),
+                Username = reader.GetString(1),
+                PasswordHash = reader.GetString(2),
+                Role = Enum.Parse<AppRole>(reader.GetString(3)),
+                EmployeeId = reader.IsDBNull(4) ? null : reader.GetInt64(4),
+                EmployeeName = reader.IsDBNull(5) ? null : reader.GetString(5),
+                IsActive = reader.GetInt32(6) == 1
             });
         }
 

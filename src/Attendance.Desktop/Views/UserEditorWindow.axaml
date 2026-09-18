@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Attendance.Desktop.ViewModels"
+        xmlns:domain="using:Attendance.Core.Domain"
+        x:Class="Attendance.Desktop.Views.UserEditorWindow"
+        x:DataType="vm:UserEditorViewModel"
+        Title="{Binding Title}"
+        Width="440"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Padding="24">
+    <StackPanel Spacing="12">
+        <TextBlock Text="{Binding Title}" Classes="h1"/>
+        <TextBlock Classes="muted" TextWrapping="Wrap"
+                   Text="Básico debe elegir la persona del directorio. Deje la contraseña vacía al editar si no quiere cambiarla."/>
+        <TextBox Watermark="Usuario" Text="{Binding FormUsername}"/>
+        <TextBox Watermark="Contraseña" PasswordChar="•" Text="{Binding Password}"/>
+        <TextBox Watermark="Confirmar contraseña" PasswordChar="•" Text="{Binding ConfirmPassword}"/>
+        <ComboBox ItemsSource="{Binding RoleChoices}"
+                  SelectedItem="{Binding SelectedRole}"
+                  PlaceholderText="Tipo de cuenta"
+                  HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:AppRoleChoice">
+                    <TextBlock Text="{Binding Label}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+        <ComboBox ItemsSource="{Binding Employees}"
+                  SelectedItem="{Binding SelectedEmployee}"
+                  PlaceholderText="Persona (obligatoria si es básico)"
+                  HorizontalAlignment="Stretch"
+                  IsVisible="{Binding NeedsEmployee}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="domain:Employee">
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+        <CheckBox Content="Activo" IsChecked="{Binding IsActive}"/>
+        <TextBlock Text="{Binding Error}" Foreground="#B42318" TextWrapping="Wrap"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
+            <Button Content="Cancelar" Click="CancelClick"/>
+            <Button Content="Guardar" Classes="accent" Click="SaveClick"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -14,7 +14,7 @@ public partial class ReportView : UserControl
 
     private async void ExportClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is not ReportViewModel vm)
+        if (DataContext is not ReportViewModel vm || !vm.CanManagePayroll)
         {
             return;
         }

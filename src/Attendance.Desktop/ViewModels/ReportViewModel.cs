@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using Attendance.Core.Auth;
 using Attendance.Core.Data;
 using Attendance.Core.Device;
 using Attendance.Core.Domain;
@@ -16,17 +17,21 @@ public partial class ReportViewModel : ViewModelBase
     private readonly IWeeklyPayrollService _payroll;
     private readonly IPayrollExporter _exporter;
     private readonly IAttendanceSyncService _sync;
+    private readonly IAuthSession _session;
 
     public ReportViewModel(
         IAttendanceStore store,
         IWeeklyPayrollService payroll,
         IPayrollExporter exporter,
-        IAttendanceSyncService sync)
+        IAttendanceSyncService sync,
+        IAuthSession session)
     {
         _store = store;
         _payroll = payroll;
         _exporter = exporter;
         _sync = sync;
+        _session = session;
+        CanManagePayroll = session.IsAdmin;
         WeekStart = WeekRange.StartOfWeek(WeekRange.Today());
         Reload();
     }
@@ -34,6 +39,7 @@ public partial class ReportViewModel : ViewModelBase
     public ObservableCollection<WeeklyReportLine> Lines { get; } = [];
     public ObservableCollection<PunchIssue> Issues { get; } = [];
     public ObservableCollection<EmployeePresenceItem> PresenceItems { get; } = [];
+    public bool CanManagePayroll { get; }
 
     [ObservableProperty]
     private DateTimeOffset _weekStartDate = DateTimeOffset.Now;
@@ -116,6 +122,10 @@ public partial class ReportViewModel : ViewModelBase
     [RelayCommand]
     private async Task DownloadAsync()
     {
+        if (!_session.IsAdmin)
+        {
+            return;
+        }
         try
         {
             var (device, count) = await _sync.DownloadConfiguredAsync(_store.GetSettings());
@@ -132,6 +142,10 @@ public partial class ReportViewModel : ViewModelBase
 
     public void ExportTo(string path)
     {
+        if (!_session.IsAdmin)
+        {
+            return;
+        }
         if (_report is null)
         {
             Reload();

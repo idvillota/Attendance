@@ -5,10 +5,9 @@
              x:Class="Attendance.Desktop.Views.PunchesView"
              x:DataType="vm:PunchesViewModel">
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16">
-        <TextBlock Classes="muted" TextWrapping="Wrap"
-                   Text="Use esta pantalla solo para corregir una entrada o salida que el K30 no trajo bien. No es el reloj: las personas marcan en el dispositivo."/>
+        <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding IntroText}"/>
 
-        <Border Grid.Row="1" Classes="card">
+        <Border Grid.Row="1" Classes="card" IsVisible="{Binding CanEditPunches}">
             <StackPanel Spacing="10">
                 <TextBlock Text="Agregar corrección" FontWeight="SemiBold"/>
                 <WrapPanel ItemWidth="220" ItemHeight="40">
