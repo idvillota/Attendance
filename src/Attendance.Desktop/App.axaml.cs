@@ -29,6 +29,7 @@ public partial class App : Application
         services.AddSingleton<PunchesViewModel>();
         services.AddSingleton<ReportViewModel>();
         services.AddSingleton<DeviceViewModel>();
+        services.AddSingleton<ScheduleViewModel>();
 
         var provider = services.BuildServiceProvider();
         provider.GetRequiredService<AttendanceDb>().Initialize();

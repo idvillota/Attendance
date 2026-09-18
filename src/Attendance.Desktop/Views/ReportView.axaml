@@ -48,7 +48,7 @@
                       BorderThickness="0"
                       Background="Transparent">
                 <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="Persona" Width="*">
+                    <DataGridTemplateColumn Header="Persona" Width="160">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="domain:WeeklyReportLine">
                                 <TextBlock Text="{Binding EmployeeName}" VerticalAlignment="Center" Margin="16,0"/>
@@ -69,10 +69,10 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Valor hora" Width="120">
+                    <DataGridTemplateColumn Header="Desglose" Width="*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate x:DataType="domain:WeeklyReportLine">
-                                <TextBlock Text="{Binding HourlyRate, StringFormat=N0}" VerticalAlignment="Center" Margin="8,0"/>
+                                <TextBlock Text="{Binding Breakdown}" VerticalAlignment="Center" Margin="8,0" TextWrapping="Wrap"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

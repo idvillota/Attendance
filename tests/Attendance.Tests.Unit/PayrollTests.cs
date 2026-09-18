@@ -55,10 +55,13 @@ public class ShiftPairingTests
 public class WeeklyPayrollServiceTests
 {
     [Fact]
-    public void Pay_is_hours_times_role_rate()
+    public void Pay_uses_ordinary_day_rate_for_weekday_daytime()
     {
         var weekStart = new DateOnly(2026, 9, 14);
-        var roles = new[] { new Role { Id = 1, Name = "Mesero", HourlyRate = 8000m, IsActive = true } };
+        var roles = new[]
+        {
+            new Role { Id = 1, Name = "Mesero", IsActive = true, Rates = RoleRates.FromOrdinary(8000m) }
+        };
         var employees = new[]
         {
             new Employee { Id = 1, Name = "Ana", RoleId = 1, RoleName = "Mesero", DeviceUserId = "1", IsActive = true }
@@ -71,7 +74,7 @@ public class WeeklyPayrollServiceTests
             MakePunch(1, "2026-09-15T16:00:00", PunchDirection.Out)
         };
 
-        var report = new WeeklyPayrollService().Build(weekStart, employees, roles, punches);
+        var report = new WeeklyPayrollService().Build(weekStart, employees, roles, punches, TenantSchedule.Default());
 
         var line = Assert.Single(report.Lines);
         Assert.Equal(16m, line.Hours);
@@ -80,10 +83,44 @@ public class WeeklyPayrollServiceTests
     }
 
     [Fact]
+    public void Sunday_night_hour_pays_more_than_monday_morning()
+    {
+        var weekStart = new DateOnly(2026, 9, 14);
+        var rates = new RoleRates
+        {
+            OrdinaryDay = 10000m,
+            OrdinaryNight = 14000m,
+            SundayDay = 15000m,
+            SundayNight = 18000m,
+            ExtraOrdinaryDay = 10000m,
+            ExtraOrdinaryNight = 14000m,
+            ExtraSundayDay = 15000m,
+            ExtraSundayNight = 18000m
+        };
+        var roles = new[] { new Role { Id = 1, Name = "Mesero", IsActive = true, Rates = rates } };
+        var employees = new[]
+        {
+            new Employee { Id = 1, Name = "Ana", RoleId = 1, IsActive = true }
+        };
+        var punches = new[]
+        {
+            MakePunch(1, "2026-09-14T09:00:00", PunchDirection.In),
+            MakePunch(1, "2026-09-14T10:00:00", PunchDirection.Out),
+            MakePunch(1, "2026-09-20T20:00:00", PunchDirection.In),
+            MakePunch(1, "2026-09-20T21:00:00", PunchDirection.Out)
+        };
+
+        var report = new WeeklyPayrollService().Build(weekStart, employees, roles, punches, TenantSchedule.Default());
+        var line = Assert.Single(report.Lines);
+        Assert.Equal(2m, line.Hours);
+        Assert.Equal(28000m, line.Pay);
+    }
+
+    [Fact]
     public void Ignores_punches_outside_the_week()
     {
         var weekStart = new DateOnly(2026, 9, 14);
-        var roles = new[] { new Role { Id = 1, Name = "Mesero", HourlyRate = 8000m, IsActive = true } };
+        var roles = new[] { new Role { Id = 1, Name = "Mesero", IsActive = true, Rates = RoleRates.FromOrdinary(8000m) } };
         var employees = new[]
         {
             new Employee { Id = 1, Name = "Ana", RoleId = 1, IsActive = true }

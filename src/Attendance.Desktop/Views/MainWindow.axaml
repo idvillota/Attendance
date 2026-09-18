@@ -27,6 +27,9 @@
         <DataTemplate DataType="vm:DeviceViewModel">
             <views:DeviceView />
         </DataTemplate>
+        <DataTemplate DataType="vm:ScheduleViewModel">
+            <views:ScheduleView />
+        </DataTemplate>
     </Window.DataTemplates>
 
     <Grid ColumnDefinitions="236,*">

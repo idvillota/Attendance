@@ -4,7 +4,7 @@
         x:Class="Attendance.Desktop.Views.RoleEditorWindow"
         x:DataType="vm:RoleEditorViewModel"
         Title="{Binding Title}"
-        Width="400"
+        Width="760"
         SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
@@ -12,10 +12,36 @@
     <StackPanel Spacing="12">
         <TextBlock Text="{Binding Title}" Classes="h1"/>
         <TextBlock Classes="muted" TextWrapping="Wrap"
-                   Text="El valor por hora se usa en el reporte semanal: horas × este valor."/>
+                   Text="Estos valores los define el restaurante. El ejemplo 2026 solo rellena; usted puede cambiar cualquier casilla. El pago usa el día y la hora reales de cada marcación."/>
         <TextBox Watermark="Nombre (ej. Mesero)" Text="{Binding FormName}"/>
-        <TextBox Watermark="Valor por hora" Text="{Binding HourlyRateText}"/>
         <CheckBox Content="Activo" IsChecked="{Binding IsActive}"/>
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="Rellenar ejemplo 2026" Command="{Binding FillLegal2026Command}"/>
+            <Button Content="Calcular desde hora ordinaria" Command="{Binding RecalcFromOrdinaryCommand}"/>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="200,*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="Diurna" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="Nocturna" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Ordinaria (lun–sáb)" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding OrdinaryDay}" Watermark="8338"/>
+            <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding OrdinaryNight}" Watermark="11256"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Dominical / festivo" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SundayDay}" Watermark="15842"/>
+            <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding SundayNight}" Watermark="18760"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Extra ordinaria" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding ExtraOrdinaryDay}" Watermark="10422"/>
+            <TextBox Grid.Row="3" Grid.Column="2" Text="{Binding ExtraOrdinaryNight}" Watermark="14591"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Extra dominical / festivo" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding ExtraSundayDay}" Watermark="17927"/>
+            <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding ExtraSundayNight}" Watermark="22095"/>
+        </Grid>
+
         <TextBlock Text="{Binding Error}" Foreground="#B42318" TextWrapping="Wrap"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
             <Button Content="Cancelar" Click="CancelClick"/>

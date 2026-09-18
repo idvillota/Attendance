@@ -19,9 +19,14 @@ public sealed class Role
 {
     public long Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public decimal HourlyRate { get; set; }
     public bool IsActive { get; set; } = true;
-    public string RateLabel => $"{HourlyRate:N0} / hora";
+    public RoleRates Rates { get; set; } = RoleRates.FromOrdinary(8338m);
+    public decimal HourlyRate
+    {
+        get => Rates.OrdinaryDay;
+        set => Rates.OrdinaryDay = value;
+    }
+    public string RateLabel => $"Ordinaria {Rates.OrdinaryDay:N0} · Dominical {Rates.SundayDay:N0}";
     public string StatusLabel => IsActive ? "Activo" : "Inactivo";
 }
 
@@ -84,6 +89,7 @@ public sealed class AppSettings
     public string DeviceIp { get; set; } = "192.168.1.201";
     public int DevicePort { get; set; } = 4370;
     public int DeviceNumber { get; set; } = 1;
+    public TenantSchedule Schedule { get; set; } = TenantSchedule.Default();
 }
 
 public sealed class WeeklyReportLine
@@ -94,6 +100,8 @@ public sealed class WeeklyReportLine
     public decimal HourlyRate { get; set; }
     public decimal Hours { get; set; }
     public decimal Pay { get; set; }
+    public string Breakdown { get; set; } = string.Empty;
+    public IReadOnlyList<PaySlice> Slices { get; set; } = [];
 }
 
 public sealed class WeeklyReport

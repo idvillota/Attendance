@@ -63,7 +63,7 @@ public partial class ReportViewModel : ViewModelBase
     {
         WeekStart = WeekRange.StartOfWeek(DateOnly.FromDateTime(WeekStartDate.LocalDateTime.Date));
         WeekStartDate = new DateTimeOffset(WeekStart.ToDateTime(TimeOnly.MinValue));
-        _report = _payroll.Build(WeekStart, _db.GetEmployees(), _db.GetRoles(), _db.GetPunches());
+        _report = _payroll.Build(WeekStart, _db.GetEmployees(), _db.GetRoles(), _db.GetPunches(), _db.GetSchedule());
 
         Lines.Clear();
         foreach (var line in _report.Lines)

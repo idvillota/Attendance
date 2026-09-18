@@ -12,7 +12,7 @@
                     Click="AddClick"
                     VerticalAlignment="Top"/>
             <TextBlock Classes="muted" TextWrapping="Wrap" Margin="0,0,16,0"
-                       Text="Cada rol tiene un valor por hora. El pago semanal es horas trabajadas × este valor."/>
+                       Text="Cada rol tiene tarifas por tipo de hora (ordinaria, nocturna, dominical, extra). El horario se pinta en Horario y recargos."/>
         </DockPanel>
 
         <Border Grid.Row="1" Classes="card" Padding="8,4">

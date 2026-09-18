@@ -9,13 +9,15 @@ public partial class MainViewModel : ViewModelBase
         EmployeesViewModel employees,
         PunchesViewModel punches,
         ReportViewModel report,
-        DeviceViewModel device)
+        DeviceViewModel device,
+        ScheduleViewModel schedule)
     {
         Roles = roles;
         Employees = employees;
         Punches = punches;
         Report = report;
         Device = device;
+        Schedule = schedule;
         CurrentPage = report;
         CurrentSection = NavItems[0];
     }
@@ -25,6 +27,7 @@ public partial class MainViewModel : ViewModelBase
         "Esta semana",
         "Personas",
         "Roles",
+        "Horario y recargos",
         "Corregir marcaciones",
         "Reloj K30"
     ];
@@ -34,6 +37,7 @@ public partial class MainViewModel : ViewModelBase
     public PunchesViewModel Punches { get; }
     public ReportViewModel Report { get; }
     public DeviceViewModel Device { get; }
+    public ScheduleViewModel Schedule { get; }
 
     [ObservableProperty]
     private ViewModelBase _currentPage = null!;
@@ -64,14 +68,19 @@ public partial class MainViewModel : ViewModelBase
                 CurrentSection = NavItems[2];
                 break;
             case 3:
-                Punches.Reload();
-                CurrentPage = Punches;
+                Schedule.Reload();
+                CurrentPage = Schedule;
                 CurrentSection = NavItems[3];
                 break;
             case 4:
+                Punches.Reload();
+                CurrentPage = Punches;
+                CurrentSection = NavItems[4];
+                break;
+            case 5:
                 Device.Reload();
                 CurrentPage = Device;
-                CurrentSection = NavItems[4];
+                CurrentSection = NavItems[5];
                 break;
         }
     }

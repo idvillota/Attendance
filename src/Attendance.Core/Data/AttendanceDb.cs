@@ -26,7 +26,8 @@ public sealed class AttendanceDb
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 hourly_rate TEXT NOT NULL,
-                is_active INTEGER NOT NULL DEFAULT 1
+                is_active INTEGER NOT NULL DEFAULT 1,
+                rates_json TEXT
             );
             CREATE TABLE IF NOT EXISTS employees (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,7 +52,9 @@ public sealed class AttendanceDb
             );
             """;
         cmd.ExecuteNonQuery();
+        EnsureRatesColumn(connection);
         EnsureDemoRoster(connection);
+        BackfillRoleRates(connection);
     }
 
     public IReadOnlyList<Role> GetRoles(bool activeOnly = false)
@@ -59,30 +62,37 @@ public sealed class AttendanceDb
         using var connection = Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = activeOnly
-            ? "SELECT id, name, hourly_rate, is_active FROM roles WHERE is_active = 1 ORDER BY name"
-            : "SELECT id, name, hourly_rate, is_active FROM roles ORDER BY name";
+            ? "SELECT id, name, hourly_rate, is_active, rates_json FROM roles WHERE is_active = 1 ORDER BY name"
+            : "SELECT id, name, hourly_rate, is_active, rates_json FROM roles ORDER BY name";
         return ReadRoles(cmd);
     }
 
-    public Role AddRole(string name, decimal hourlyRate)
+    public Role AddRole(string name, RoleRates? rates = null)
     {
+        rates ??= RoleRates.FromOrdinary(8338m);
         using var connection = Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "INSERT INTO roles (name, hourly_rate, is_active) VALUES ($n, $r, 1); SELECT last_insert_rowid();";
+        cmd.CommandText = """
+            INSERT INTO roles (name, hourly_rate, is_active, rates_json)
+            VALUES ($n, $r, 1, $j);
+            SELECT last_insert_rowid();
+            """;
         cmd.Parameters.AddWithValue("$n", name.Trim());
-        cmd.Parameters.AddWithValue("$r", FormatDecimal(hourlyRate));
+        cmd.Parameters.AddWithValue("$r", FormatDecimal(rates.OrdinaryDay));
+        cmd.Parameters.AddWithValue("$j", rates.ToJson());
         var id = (long)cmd.ExecuteScalar()!;
-        return new Role { Id = id, Name = name.Trim(), HourlyRate = hourlyRate, IsActive = true };
+        return new Role { Id = id, Name = name.Trim(), Rates = rates, IsActive = true };
     }
 
     public void UpdateRole(Role role)
     {
         using var connection = Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "UPDATE roles SET name = $n, hourly_rate = $r, is_active = $a WHERE id = $id";
+        cmd.CommandText = "UPDATE roles SET name = $n, hourly_rate = $r, is_active = $a, rates_json = $j WHERE id = $id";
         cmd.Parameters.AddWithValue("$n", role.Name.Trim());
-        cmd.Parameters.AddWithValue("$r", FormatDecimal(role.HourlyRate));
+        cmd.Parameters.AddWithValue("$r", FormatDecimal(role.Rates.OrdinaryDay));
         cmd.Parameters.AddWithValue("$a", role.IsActive ? 1 : 0);
+        cmd.Parameters.AddWithValue("$j", role.Rates.ToJson());
         cmd.Parameters.AddWithValue("$id", role.Id);
         cmd.ExecuteNonQuery();
     }
@@ -241,7 +251,8 @@ public sealed class AttendanceDb
             UseMockDevice = GetBool(map, "use_mock_device", true),
             DeviceIp = GetString(map, "device_ip", "192.168.1.201"),
             DevicePort = GetInt(map, "device_port", 4370),
-            DeviceNumber = GetInt(map, "device_number", 1)
+            DeviceNumber = GetInt(map, "device_number", 1),
+            Schedule = ReadSchedule(map)
         };
     }
 
@@ -251,6 +262,68 @@ public sealed class AttendanceDb
         UpsertSetting("device_ip", settings.DeviceIp.Trim());
         UpsertSetting("device_port", settings.DevicePort.ToString(CultureInfo.InvariantCulture));
         UpsertSetting("device_number", settings.DeviceNumber.ToString(CultureInfo.InvariantCulture));
+    }
+
+    public TenantSchedule GetSchedule() => GetSettings().Schedule;
+
+    public void SaveSchedule(TenantSchedule schedule)
+    {
+        UpsertSetting("night_start", schedule.NightStart.ToString("HH:mm", CultureInfo.InvariantCulture));
+        UpsertSetting("night_end", schedule.NightEnd.ToString("HH:mm", CultureInfo.InvariantCulture));
+        UpsertSetting("extra_after_hours", schedule.ExtraAfterHours.ToString(CultureInfo.InvariantCulture));
+        UpsertSetting("schedule_cells", string.Join(",", schedule.Cells.Select(c => ((int)c).ToString(CultureInfo.InvariantCulture))));
+        UpsertSetting("holidays", string.Join(",", schedule.Holidays.Select(d => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))));
+    }
+
+    private static TenantSchedule ReadSchedule(IReadOnlyDictionary<string, string> map)
+    {
+        var schedule = TenantSchedule.Default();
+        if (TimeOnly.TryParse(GetString(map, "night_start", "19:00"), out var nightStart))
+        {
+            schedule.NightStart = nightStart;
+        }
+
+        if (TimeOnly.TryParse(GetString(map, "night_end", "06:00"), out var nightEnd))
+        {
+            schedule.NightEnd = nightEnd;
+        }
+
+        if (decimal.TryParse(GetString(map, "extra_after_hours", "8"), CultureInfo.InvariantCulture, out var extra))
+        {
+            schedule.ExtraAfterHours = extra;
+        }
+
+        var cells = GetString(map, "schedule_cells", "");
+        if (!string.IsNullOrWhiteSpace(cells))
+        {
+            var parsed = cells.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(v => Enum.IsDefined(typeof(CalendarBand), int.Parse(v, CultureInfo.InvariantCulture))
+                    ? (CalendarBand)int.Parse(v, CultureInfo.InvariantCulture)
+                    : CalendarBand.OrdinaryDay)
+                .ToArray();
+            if (parsed.Length == TenantSchedule.CellCount)
+            {
+                schedule.Cells = parsed;
+            }
+        }
+        else
+        {
+            schedule.PaintFromNightWindow();
+        }
+
+        var holidays = GetString(map, "holidays", "");
+        if (!string.IsNullOrWhiteSpace(holidays))
+        {
+            foreach (var token in holidays.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (DateOnly.TryParse(token, out var date))
+                {
+                    schedule.Holidays.Add(date);
+                }
+            }
+        }
+
+        return schedule;
     }
 
     private void UpsertSetting(string key, string value)
@@ -308,9 +381,15 @@ public sealed class AttendanceDb
         }
 
         using var insert = connection.CreateCommand();
-        insert.CommandText = "INSERT INTO roles (name, hourly_rate, is_active) VALUES ($n, $r, 1); SELECT last_insert_rowid();";
+        insert.CommandText = """
+            INSERT INTO roles (name, hourly_rate, is_active, rates_json)
+            VALUES ($n, $r, 1, $j);
+            SELECT last_insert_rowid();
+            """;
+        var rates = RoleRates.FromOrdinary(decimal.Parse(hourlyRate, CultureInfo.InvariantCulture));
         insert.Parameters.AddWithValue("$n", name);
         insert.Parameters.AddWithValue("$r", hourlyRate);
+        insert.Parameters.AddWithValue("$j", rates.ToJson());
         return (long)insert.ExecuteScalar()!;
     }
 
@@ -371,6 +450,67 @@ public sealed class AttendanceDb
             var clockOut = date.ToDateTime(new TimeOnly(16, 0)).AddMinutes(employeeId * -2);
             InsertPunch(punch, pE, pT, pD, pK, employeeId, clockOut, "Out");
         }
+
+        var sunday = monday.AddDays(6);
+        var sundayIn = sunday.ToDateTime(new TimeOnly(20, 0));
+        var sundayOut = sunday.ToDateTime(new TimeOnly(21, 0));
+        InsertPunch(punch, pE, pT, pD, pK, employeeId, sundayIn, "In");
+        InsertPunch(punch, pE, pT, pD, pK, employeeId, sundayOut, "Out");
+    }
+
+    private static void EnsureRatesColumn(SqliteConnection connection)
+    {
+        var hasRates = false;
+        using (var info = connection.CreateCommand())
+        {
+            info.CommandText = "PRAGMA table_info(roles)";
+            using var reader = info.ExecuteReader();
+            while (reader.Read())
+            {
+                if (string.Equals(reader.GetString(1), "rates_json", StringComparison.OrdinalIgnoreCase))
+                {
+                    hasRates = true;
+                    break;
+                }
+            }
+        }
+
+        if (hasRates)
+        {
+            return;
+        }
+
+        using var alter = connection.CreateCommand();
+        alter.CommandText = "ALTER TABLE roles ADD COLUMN rates_json TEXT";
+        alter.ExecuteNonQuery();
+    }
+
+    private static void BackfillRoleRates(SqliteConnection connection)
+    {
+        using var select = connection.CreateCommand();
+        select.CommandText = "SELECT id, hourly_rate, rates_json FROM roles";
+        using var reader = select.ExecuteReader();
+        var updates = new List<(long Id, string Json)>();
+        while (reader.Read())
+        {
+            if (!reader.IsDBNull(2) && !string.IsNullOrWhiteSpace(reader.GetString(2)))
+            {
+                continue;
+            }
+
+            var ordinary = ParseDecimal(reader.GetString(1));
+            updates.Add((reader.GetInt64(0), RoleRates.FromOrdinary(ordinary).ToJson()));
+        }
+
+        reader.Close();
+        foreach (var (id, json) in updates)
+        {
+            using var update = connection.CreateCommand();
+            update.CommandText = "UPDATE roles SET rates_json = $j WHERE id = $id";
+            update.Parameters.AddWithValue("$j", json);
+            update.Parameters.AddWithValue("$id", id);
+            update.ExecuteNonQuery();
+        }
     }
 
     private static void InsertPunch(
@@ -406,8 +546,8 @@ public sealed class AttendanceDb
             {
                 Id = reader.GetInt64(0),
                 Name = reader.GetString(1),
-                HourlyRate = ParseDecimal(reader.GetString(2)),
-                IsActive = reader.GetInt32(3) == 1
+                IsActive = reader.GetInt32(3) == 1,
+                Rates = RoleRates.FromJson(reader.IsDBNull(4) ? null : reader.GetString(4), ParseDecimal(reader.GetString(2)))
             });
         }
 

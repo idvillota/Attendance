@@ -78,8 +78,10 @@ public sealed class WeeklyPayrollService
         DateOnly weekStart,
         IReadOnlyList<Employee> employees,
         IReadOnlyList<Role> roles,
-        IReadOnlyList<Punch> punches)
+        IReadOnlyList<Punch> punches,
+        TenantSchedule? schedule = null)
     {
+        schedule ??= TenantSchedule.Default();
         var weekEnd = weekStart.AddDays(6);
         var from = WeekRange.RangeStart(weekStart);
         var to = WeekRange.RangeEndExclusive(weekStart);
@@ -88,28 +90,29 @@ public sealed class WeeklyPayrollService
             .ToList();
 
         var paired = ShiftPairing.Pair(weekPunches);
-        var hoursByEmployee = paired.Shifts
-            .GroupBy(s => s.EmployeeId)
-            .ToDictionary(g => g.Key, g => g.Sum(s => s.Hours));
-
+        var shiftsByEmployee = paired.Shifts.GroupBy(s => s.EmployeeId).ToDictionary(g => g.Key, g => g.ToList());
         var roleById = roles.ToDictionary(r => r.Id);
         var lines = new List<WeeklyReportLine>();
 
         foreach (var employee in employees.Where(e => e.IsActive).OrderBy(e => e.Name))
         {
             roleById.TryGetValue(employee.RoleId, out var role);
-            var hours = hoursByEmployee.GetValueOrDefault(employee.Id);
-            var rate = role?.HourlyRate ?? 0m;
-            var pay = decimal.Round(hours * rate, 0, MidpointRounding.AwayFromZero);
+            var rates = role?.Rates ?? RoleRates.FromOrdinary(role?.HourlyRate ?? 0m);
+            var shifts = shiftsByEmployee.GetValueOrDefault(employee.Id) ?? [];
+            var slices = BandedPay.Price(shifts, schedule, rates);
+            var hours = decimal.Round(slices.Sum(s => s.Hours), 2);
+            var pay = slices.Sum(s => s.Pay);
 
             lines.Add(new WeeklyReportLine
             {
                 EmployeeId = employee.Id,
                 EmployeeName = employee.Name,
                 RoleName = role?.Name ?? employee.RoleName,
-                HourlyRate = rate,
+                HourlyRate = rates.OrdinaryDay,
                 Hours = hours,
-                Pay = pay
+                Pay = pay,
+                Breakdown = BandedPay.Summarize(slices),
+                Slices = slices
             });
         }
 

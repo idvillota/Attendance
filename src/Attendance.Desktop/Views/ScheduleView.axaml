@@ -1,0 +1,90 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Attendance.Desktop.ViewModels"
+             x:Class="Attendance.Desktop.Views.ScheduleView"
+             x:DataType="vm:ScheduleViewModel">
+    <ScrollViewer>
+        <StackPanel Spacing="16">
+            <TextBlock Classes="muted" TextWrapping="Wrap"
+                       Text="Cada celda es un tipo de hora, no un peso. Los pesos viven en el rol. Lunes 9am y domingo 8pm pueden pagar distinto."/>
+
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Reglas del restaurante" FontWeight="SemiBold"/>
+                    <WrapPanel>
+                        <StackPanel Margin="0,0,16,8" Spacing="4">
+                            <TextBlock Classes="muted" Text="Noche desde"/>
+                            <TextBox Width="90" Text="{Binding NightStartText}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,16,8" Spacing="4">
+                            <TextBlock Classes="muted" Text="Noche hasta"/>
+                            <TextBox Width="90" Text="{Binding NightEndText}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,16,8" Spacing="4">
+                            <TextBlock Classes="muted" Text="Extra después de (horas/día)"/>
+                            <TextBox Width="90" Text="{Binding ExtraAfterText}"/>
+                        </StackPanel>
+                    </WrapPanel>
+                    <TextBox Watermark="Festivos (yyyy-MM-dd, separados por coma)" Text="{Binding HolidaysText}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Pintar noche y domingo" Command="{Binding ApplyNightWindowCommand}"/>
+                        <Button Content="Guardar horario" Classes="accent" Command="{Binding SaveCommand}"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding Status}" Classes="muted" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Pincel" FontWeight="SemiBold"/>
+                    <WrapPanel>
+                        <Button Margin="0,0,8,8" Content="Ordinaria diurna" Click="PaintOrdinaryDay"/>
+                        <Button Margin="0,0,8,8" Content="Ordinaria nocturna" Click="PaintOrdinaryNight"/>
+                        <Button Margin="0,0,8,8" Content="Dominical diurna" Click="PaintSundayDay"/>
+                        <Button Margin="0,0,8,8" Content="Dominical nocturna" Click="PaintSundayNight"/>
+                    </WrapPanel>
+                    <TextBlock Classes="muted" Text="Gris = día · Azul = noche · Ámbar = dominical · Rojo = dominical noche"/>
+
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Days}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ScheduleDayRow">
+                                    <StackPanel Orientation="Horizontal" Margin="0,2" Spacing="4">
+                                        <TextBlock Width="36" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding DayName}"/>
+                                        <ItemsControl ItemsSource="{Binding Hours}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" Spacing="2"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:ScheduleHourCell">
+                                                    <Button Width="28" Height="22" Padding="0"
+                                                            Background="{Binding Fill}"
+                                                            ToolTip.Tip="{Binding Hour}"
+                                                            Click="CellClick"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding HourLabels}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="2"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBlock Width="28" FontSize="10" HorizontalAlignment="Center" Text="{Binding}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
