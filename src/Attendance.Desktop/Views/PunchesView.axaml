@@ -10,9 +10,10 @@
         <Border Grid.Row="1" Classes="card" IsVisible="{Binding CanEditPunches}">
             <StackPanel Spacing="10">
                 <TextBlock Text="Agregar corrección" FontWeight="SemiBold"/>
-                <WrapPanel ItemWidth="220" ItemHeight="40">
-                    <ComboBox Margin="0,0,8,8"
-                              HorizontalAlignment="Stretch"
+                <WrapPanel>
+                    <ComboBox MinWidth="200"
+                              Margin="0,0,12,8"
+                              VerticalAlignment="Center"
                               ItemsSource="{Binding Employees}"
                               SelectedItem="{Binding SelectedEmployee}"
                               PlaceholderText="Persona">
@@ -22,9 +23,14 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <DatePicker Margin="0,0,8,8" SelectedDate="{Binding PunchedAt}"/>
-                    <ComboBox Margin="0,0,8,8"
+                    <DatePicker MinWidth="280"
+                                Margin="0,0,12,8"
+                                VerticalAlignment="Center"
+                                SelectedDate="{Binding PunchedAt}"/>
+                    <ComboBox MinWidth="140"
                               Width="160"
+                              Margin="0,0,12,8"
+                              VerticalAlignment="Center"
                               ItemsSource="{Binding Directions}"
                               SelectedItem="{Binding Direction}">
                         <ComboBox.ItemTemplate>
@@ -33,8 +39,15 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <Button Margin="0,0,8,8" Content="Agregar" Classes="accent" Command="{Binding AddCommand}"/>
-                    <Button Margin="0,0,8,8" Content="Eliminar seleccionada" Command="{Binding DeleteCommand}"/>
+                    <Button Margin="0,0,12,8"
+                            VerticalAlignment="Center"
+                            Content="Agregar"
+                            Classes="accent"
+                            Command="{Binding AddCommand}"/>
+                    <Button Margin="0,0,12,8"
+                            VerticalAlignment="Center"
+                            Content="Eliminar seleccionada"
+                            Command="{Binding DeleteCommand}"/>
                 </WrapPanel>
                 <TextBlock Text="{Binding Status}" Classes="muted"/>
             </StackPanel>

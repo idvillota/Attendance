@@ -23,6 +23,17 @@ public partial class EmployeesView : UserControl
         }
     }
 
+    private async void DeleteClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not EmployeesViewModel vm ||
+            sender is not Control { DataContext: EmployeePresenceItem { Employee: { } employee } })
+        {
+            return;
+        }
+
+        await ConfirmDeleteAsync(this, vm, employee);
+    }
+
     private async Task OpenEditor(Employee? employee)
     {
         if (DataContext is not EmployeesViewModel vm)
@@ -35,9 +46,31 @@ public partial class EmployeesView : UserControl
             return;
         }
 
-        if (await DesktopDialogs.ShowEditorAsync<EmployeeEditorWindow>(this, vm.CreateEditor(employee)))
+        var editor = vm.CreateEditor(employee);
+        if (await DesktopDialogs.ShowEditorAsync<EmployeeEditorWindow>(this, editor))
         {
-            vm.Reload();
+            vm.Reload(string.IsNullOrWhiteSpace(editor.DeleteStatus) ? null : editor.DeleteStatus);
+        }
+    }
+
+    internal static async Task ConfirmDeleteAsync(Control host, EmployeesViewModel vm, Employee employee)
+    {
+        if (!vm.CanManagePeople)
+        {
+            return;
+        }
+
+        try
+        {
+            var delete = vm.CreateDelete(employee);
+            if (await DesktopDialogs.ShowEditorAsync<EmployeeDeleteWindow>(host, delete))
+            {
+                vm.Reload(delete.ResultStatus);
+            }
+        }
+        catch (Exception ex)
+        {
+            vm.Reload(ex.Message);
         }
     }
 }

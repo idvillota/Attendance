@@ -5,16 +5,35 @@
              xmlns:local="using:Attendance.Desktop">
     <Application.Resources>
         <local:BoolToSiNoConverter x:Key="BoolToSiNo"/>
+        <SolidColorBrush x:Key="NavSelectedBrush" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="NavHoverBrush" Color="#334155"/>
     </Application.Resources>
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+
         <Style Selector="TextBlock.h1">
-            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontSize" Value="22"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
         </Style>
         <Style Selector="TextBlock.muted">
-            <Setter Property="Foreground" Value="#667085"/>
+            <Setter Property="Foreground" Value="#475467"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="LineHeight" Value="18"/>
+        </Style>
+        <Style Selector="TextBlock.fieldLabel">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#344054"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        <Style Selector="Border.filter">
+            <Setter Property="Background" Value="#F8FAFC"/>
+            <Setter Property="BorderBrush" Value="#E4E7EC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16,14"/>
         </Style>
         <Style Selector="Border.card">
             <Setter Property="Background" Value="White"/>
@@ -25,47 +44,144 @@
         <Style Selector="Border.stat">
             <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Padding" Value="18,16"/>
+            <Setter Property="Padding" Value="16,14"/>
             <Setter Property="BoxShadow" Value="0 1 2 0 #10182814"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinWidth" Value="160"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+        <Style Selector="DatePicker">
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinWidth" Value="260"/>
+        </Style>
+        <Style Selector="DatePicker.range">
+            <Setter Property="MinWidth" Value="220"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
+        <Style Selector="TimePicker">
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinWidth" Value="160"/>
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="MinHeight" Value="32"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#344054"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontSize" Value="14"/>
         </Style>
         <Style Selector="Button.accent">
             <Setter Property="Background" Value="#2563EB"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Padding" Value="16,8"/>
             <Setter Property="CornerRadius" Value="8"/>
         </Style>
         <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#1D4ED8"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style Selector="Button.ghost">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#344054"/>
+            <Setter Property="Background" Value="#F2F4F7"/>
+            <Setter Property="Foreground" Value="#1D2939"/>
             <Setter Property="Padding" Value="12,6"/>
             <Setter Property="CornerRadius" Value="8"/>
         </Style>
+        <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#E4E7EC"/>
+            <Setter Property="Foreground" Value="#101828"/>
+        </Style>
+        <Style Selector="Button.danger">
+            <Setter Property="Background" Value="#FEE4E2"/>
+            <Setter Property="Foreground" Value="#B42318"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+        <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#FECDCA"/>
+            <Setter Property="Foreground" Value="#912018"/>
+        </Style>
+
         <Style Selector="ListBox.nav">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
         <Style Selector="ListBox.nav ListBoxItem">
-            <Setter Property="Foreground" Value="#D0D5DD"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#E2E8F0"/>
             <Setter Property="Padding" Value="12,10"/>
             <Setter Property="Margin" Value="0,0,0,4"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinHeight" Value="40"/>
         </Style>
-        <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="#1D2939"/>
+        <Style Selector="ListBox.nav ListBoxItem TextBlock">
+            <Setter Property="Foreground" Value="#E2E8F0"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:pointerover">
+            <Setter Property="Background" Value="#334155"/>
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#334155"/>
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:pointerover TextBlock">
+            <Setter Property="Foreground" Value="#F8FAFC"/>
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected">
+            <Setter Property="Background" Value="#3B82F6"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
-        <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#1D2939"/>
+        <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected:pointerover">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected:focus /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected:pointerover TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
         <Style Selector="DataGrid">
-            <Setter Property="RowHeight" Value="44"/>
+            <Setter Property="RowHeight" Value="40"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#344054"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="12,8"/>
         </Style>
     </Application.Styles>
 </Application>

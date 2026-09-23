@@ -6,20 +6,47 @@ namespace Attendance.Core.Device;
 public sealed class AttendanceSyncService : IAttendanceSyncService
 {
     private readonly IAttendanceStore _store;
+    private readonly IDeviceLogDraft _draft;
 
-    public AttendanceSyncService(IAttendanceStore store)
+    public AttendanceSyncService(IAttendanceStore store, IDeviceLogDraft draft)
     {
         _store = store;
+        _draft = draft;
     }
 
-    public IAttendanceDevice CreateDevice(AppSettings settings)
-    {
-        if (settings.UseMockDevice)
-        {
-            return new MockAttendanceDevice(() => _store.GetEmployees(activeOnly: true));
-        }
+    public IAttendanceDevice CreateDevice(AppSettings settings) =>
+        new ZkTecoNetworkDevice(
+            string.IsNullOrWhiteSpace(settings.DeviceIp) ? K30Defaults.Ip : settings.DeviceIp,
+            settings.DevicePort == 0 ? K30Defaults.Port : settings.DevicePort);
 
-        return new ZkTecoNetworkDevice(settings.DeviceIp, settings.DevicePort);
+    public async Task<(IAttendanceDevice Device, IReadOnlyList<DevicePunch> Logs)> FetchLogsAsync(
+        AppSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        var device = CreateDevice(settings);
+        var logs = await device.DownloadLogsAsync(cancellationToken).ConfigureAwait(false);
+        return (device, logs);
+    }
+
+    public void StageLogs(IEnumerable<DevicePunch> logs, string deviceName, PunchSource source)
+    {
+        _draft.Replace(logs, _store.GetEmployees(activeOnly: true), deviceName, source);
+    }
+
+    public async Task<(IAttendanceDevice Device, int Staged)> PullToDraftAsync(
+        AppSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        var (device, logs) = await FetchLogsAsync(settings, cancellationToken).ConfigureAwait(false);
+        StageLogs(logs, device.Name, PunchSource.Device);
+        return (device, logs.Count);
+    }
+
+    public int CommitDraft(DateOnly? from = null, DateOnly? to = null)
+    {
+        var inserted = _draft.Save(_store, from, to);
+        RememberDownload();
+        return inserted;
     }
 
     public async Task<(IAttendanceDevice Device, int Imported)> DownloadConfiguredAsync(
@@ -28,8 +55,7 @@ public sealed class AttendanceSyncService : IAttendanceSyncService
     {
         var device = CreateDevice(settings);
         var logs = await device.DownloadLogsAsync(cancellationToken).ConfigureAwait(false);
-        var source = settings.UseMockDevice ? PunchSource.Mock : PunchSource.Device;
-        var imported = Import(logs, source);
+        var imported = Import(logs, PunchSource.Device);
         RememberDownload();
         return (device, imported);
     }

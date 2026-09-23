@@ -1,6 +1,7 @@
 using Attendance.Core.Auth;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Attendance.Desktop;
 
 namespace Attendance.Desktop.ViewModels;
 
@@ -10,20 +11,28 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel(
         IAuthSession session,
+        IAppNavigator navigator,
         RolesViewModel roles,
         EmployeesViewModel employees,
         PunchesViewModel punches,
         ReportViewModel report,
         DeviceViewModel device,
+        DeviceLogsViewModel deviceLogs,
         ScheduleViewModel schedule,
         UsersViewModel users)
     {
+        if (navigator is AppNavigator appNavigator)
+        {
+            appNavigator.GoToDeviceLogsHandler = OpenDeviceLogs;
+        }
+
         Session = session;
         Roles = roles;
         Employees = employees;
         Punches = punches;
         Report = report;
         Device = device;
+        DeviceLogs = deviceLogs;
         Schedule = schedule;
         Users = users;
 
@@ -40,6 +49,7 @@ public partial class MainViewModel : ViewModelBase
                 new("Horario y recargos", schedule, schedule.Reload),
                 new("Corregir marcaciones", punches, punches.Reload),
                 new("Reloj K30", device, device.Reload),
+                new("Logs K30", deviceLogs, deviceLogs.Reload),
                 new("Usuarios", users, users.Reload)
             ]
             :
@@ -63,6 +73,7 @@ public partial class MainViewModel : ViewModelBase
     public PunchesViewModel Punches { get; }
     public ReportViewModel Report { get; }
     public DeviceViewModel Device { get; }
+    public DeviceLogsViewModel DeviceLogs { get; }
     public ScheduleViewModel Schedule { get; }
     public UsersViewModel Users { get; }
 
@@ -92,6 +103,15 @@ public partial class MainViewModel : ViewModelBase
 
     [RelayCommand]
     private void Logout() => LogoutRequested?.Invoke();
+
+    private void OpenDeviceLogs()
+    {
+        var index = Array.IndexOf(NavItems, "Logs K30");
+        if (index >= 0)
+        {
+            NavIndex = index;
+        }
+    }
 
     private sealed record AppSection(string Title, ViewModelBase Page, Action Reload);
 }

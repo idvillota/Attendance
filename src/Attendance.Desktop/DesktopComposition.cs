@@ -28,7 +28,10 @@ internal static class DesktopComposition
                 sp.GetRequiredService<AttendanceDb>(),
                 sp.GetRequiredService<IAuthSession>()));
         services.AddSingleton<IWeeklyPayrollService, WeeklyPayrollService>();
+        services.AddSingleton<IDeviceLogDraft, DeviceLogDraft>();
         services.AddSingleton<IAttendanceSyncService, AttendanceSyncService>();
+        services.AddSingleton<IDeviceUserService, DeviceUserService>();
+        services.AddSingleton<IAppNavigator, AppNavigator>();
         services.AddSingleton<IPayrollExporter, PayrollExcelExporter>();
         services.AddSingleton<DesktopShell>();
         services.AddTransient<LoginViewModel>();
@@ -38,6 +41,7 @@ internal static class DesktopComposition
         services.AddTransient<PunchesViewModel>();
         services.AddTransient<ReportViewModel>();
         services.AddTransient<DeviceViewModel>();
+        services.AddTransient<DeviceLogsViewModel>();
         services.AddTransient<ScheduleViewModel>();
         services.AddTransient<UsersViewModel>();
         return services.BuildServiceProvider();

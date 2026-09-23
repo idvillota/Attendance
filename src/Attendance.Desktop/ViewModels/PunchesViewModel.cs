@@ -18,7 +18,7 @@ public partial class PunchesViewModel : ViewModelBase
         _session = session;
         CanEditPunches = session.IsAdmin;
         IntroText = session.IsAdmin
-            ? "Use esta pantalla solo para corregir una entrada o salida que el K30 no trajo bien. No es el reloj: las personas marcan en el dispositivo."
+            ? "Use esta pantalla para corregir una marcación ya guardada. Las nuevas del K30 se revisan primero en Logs K30. Para el pago, el orden de las marcas es lo que cuenta, no Entrada/Salida."
             : "Sus marcaciones según lo descargado en este PC. Si falta una, pídale al administrador que la corrija.";
         Direction = Directions[0];
         Reload();

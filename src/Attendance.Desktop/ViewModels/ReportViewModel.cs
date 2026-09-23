@@ -6,6 +6,7 @@ using Attendance.Core.Device;
 using Attendance.Core.Domain;
 using Attendance.Core.Export;
 using Attendance.Core.Payroll;
+using Attendance.Desktop;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -18,19 +19,22 @@ public partial class ReportViewModel : ViewModelBase
     private readonly IPayrollExporter _exporter;
     private readonly IAttendanceSyncService _sync;
     private readonly IAuthSession _session;
+    private readonly IAppNavigator _navigator;
 
     public ReportViewModel(
         IAttendanceStore store,
         IWeeklyPayrollService payroll,
         IPayrollExporter exporter,
         IAttendanceSyncService sync,
-        IAuthSession session)
+        IAuthSession session,
+        IAppNavigator navigator)
     {
         _store = store;
         _payroll = payroll;
         _exporter = exporter;
         _sync = sync;
         _session = session;
+        _navigator = navigator;
         CanManagePayroll = session.IsAdmin;
         WeekStart = WeekRange.StartOfWeek(WeekRange.Today());
         Reload();
@@ -128,11 +132,11 @@ public partial class ReportViewModel : ViewModelBase
         }
         try
         {
-            var (device, count) = await _sync.DownloadConfiguredAsync(_store.GetSettings());
-            Reload();
+            var (device, count) = await _sync.PullToDraftAsync(_store.GetSettings());
             Status = count == 0
-                ? $"Sin marcaciones nuevas desde {device.Name}."
-                : $"Se importaron {count} marcación(es). Revise horas y anomalías.";
+                ? $"Sin marcaciones en {device.Name}."
+                : $"{count} marcación(es) de {device.Name} listas para revisar en Logs K30.";
+            _navigator.GoToDeviceLogs();
         }
         catch (Exception ex)
         {

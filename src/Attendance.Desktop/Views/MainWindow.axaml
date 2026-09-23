@@ -5,10 +5,10 @@
         x:Class="Attendance.Desktop.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="Host Asistencia"
-        Width="1180"
-        Height="760"
-        MinWidth="960"
-        MinHeight="600"
+        Width="1280"
+        Height="720"
+        MinWidth="1024"
+        MinHeight="640"
         WindowStartupLocation="CenterScreen"
         Background="#F2F4F7">
     <Window.DataTemplates>
@@ -27,6 +27,9 @@
         <DataTemplate DataType="vm:DeviceViewModel">
             <views:DeviceView />
         </DataTemplate>
+        <DataTemplate DataType="vm:DeviceLogsViewModel">
+            <views:DeviceLogsView />
+        </DataTemplate>
         <DataTemplate DataType="vm:ScheduleViewModel">
             <views:ScheduleView />
         </DataTemplate>
@@ -35,22 +38,22 @@
         </DataTemplate>
     </Window.DataTemplates>
 
-    <Grid ColumnDefinitions="236,*">
-        <Border Background="#101828" Padding="20,24">
+    <Grid ColumnDefinitions="220,*">
+        <Border Background="#0F172A" Padding="16,20">
             <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="8,0,8,28">
-                    <TextBlock Text="Host Asistencia" FontSize="20" FontWeight="SemiBold" Foreground="White"/>
-                    <TextBlock Text="Nómina semanal · K30" Foreground="#98A2B3" FontSize="12"/>
+                <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="8,0,8,20">
+                    <TextBlock Text="Host Asistencia" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
+                    <TextBlock Text="Nómina semanal · K30" Foreground="#94A3B8" FontSize="12"/>
                 </StackPanel>
-                <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="8,16,8,0">
+                <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="8,16,8,0">
                     <TextBlock Text="{Binding UserLabel}" Foreground="White" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding RoleLabel}" Foreground="#98A2B3" FontSize="12"/>
+                    <TextBlock Text="{Binding RoleLabel}" Foreground="#94A3B8" FontSize="12"/>
                     <Button Content="Cerrar sesión"
                             Command="{Binding LogoutCommand}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Center"
-                            Background="#1D2939"
-                            Foreground="#D0D5DD"/>
+                            Background="#334155"
+                            Foreground="#F8FAFC"/>
                 </StackPanel>
                 <ListBox Classes="nav"
                          ItemsSource="{Binding NavItems}"
@@ -59,10 +62,10 @@
         </Border>
 
         <Grid Grid.Column="1" RowDefinitions="Auto,*">
-            <Border Padding="28,22,28,12">
+            <Border Padding="20,16,20,8">
                 <TextBlock Text="{Binding CurrentSection}" Classes="h1"/>
             </Border>
-            <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" Margin="28,8,28,28"/>
+            <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" Margin="20,4,20,20"/>
         </Grid>
     </Grid>
 </Window>

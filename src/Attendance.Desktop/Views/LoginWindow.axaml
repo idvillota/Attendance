@@ -4,7 +4,7 @@
         x:Class="Attendance.Desktop.Views.LoginWindow"
         x:DataType="vm:LoginViewModel"
         Title="Host Asistencia"
-        Width="460"
+        Width="440"
         SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterScreen"

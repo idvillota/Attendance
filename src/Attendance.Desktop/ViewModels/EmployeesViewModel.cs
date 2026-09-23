@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Attendance.Core.Auth;
 using Attendance.Core.Data;
+using Attendance.Core.Device;
 using Attendance.Core.Domain;
 using Attendance.Core.Payroll;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,11 +11,13 @@ namespace Attendance.Desktop.ViewModels;
 public partial class EmployeesViewModel : ViewModelBase
 {
     private readonly IAttendanceStore _store;
+    private readonly IDeviceUserService _deviceUsers;
     public bool CanManagePeople { get; }
 
-    public EmployeesViewModel(IAttendanceStore store, IAuthSession session)
+    public EmployeesViewModel(IAttendanceStore store, IAuthSession session, IDeviceUserService deviceUsers)
     {
         _store = store;
+        _deviceUsers = deviceUsers;
         CanManagePeople = session.IsAdmin;
         Reload();
     }
@@ -24,19 +27,26 @@ public partial class EmployeesViewModel : ViewModelBase
     [ObservableProperty]
     private string _freshness = string.Empty;
 
-    public EmployeeEditorViewModel CreateEditor(Employee? employee) => new(_store, employee);
+    public EmployeeEditorViewModel CreateEditor(Employee? employee) => new(_store, _deviceUsers, employee);
 
-    public void Reload()
+    public EmployeeDeleteViewModel CreateDelete(Employee employee) =>
+        new(_store, _deviceUsers, employee.Id);
+
+    public void Reload() => Reload(null);
+
+    public void Reload(string? status)
     {
         var people = _store.GetEmployees();
         var byId = people.ToDictionary(employee => employee.Id);
         Employees.Clear();
-        foreach (var status in Presence.Snapshot(people, _store.GetPunches()))
+        foreach (var presence in Presence.Snapshot(people, _store.GetPunches()))
         {
-            byId.TryGetValue(status.EmployeeId, out var employee);
-            Employees.Add(new EmployeePresenceItem(status, employee) { CanEdit = CanManagePeople });
+            byId.TryGetValue(presence.EmployeeId, out var employee);
+            Employees.Add(new EmployeePresenceItem(presence, employee) { CanEdit = CanManagePeople });
         }
 
-        Freshness = PresenceStatus.Freshness(_store.GetSettings().LastDownloadAt);
+        Freshness = string.IsNullOrWhiteSpace(status)
+            ? PresenceStatus.Freshness(_store.GetSettings().LastDownloadAt)
+            : status;
     }
 }

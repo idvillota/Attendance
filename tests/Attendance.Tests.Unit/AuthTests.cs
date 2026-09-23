@@ -42,6 +42,8 @@ public class AuthServiceTests
             Assert.Equal(ana.Id, Assert.Single(visible).Id);
             Assert.All(store.GetPunches(), punch => Assert.Equal(ana.Id, punch.EmployeeId));
             Assert.Throws<UnauthorizedAccessException>(() => store.AddEmployee("X", ana.RoleId, "99"));
+            Assert.Throws<UnauthorizedAccessException>(() => store.GetEmployeeDeletePreview(ana.Id));
+            Assert.Throws<UnauthorizedAccessException>(() => store.DeleteEmployee(ana.Id));
             Assert.Throws<UnauthorizedAccessException>(() => store.DeletePunch(1));
         }
         finally

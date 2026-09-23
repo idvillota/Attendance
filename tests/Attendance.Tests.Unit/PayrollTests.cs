@@ -51,6 +51,38 @@ public class ShiftPairingTests
         Assert.Equal(4m, Assert.Single(result.Shifts).Hours);
         Assert.Empty(result.Issues);
     }
+
+    [Fact]
+    public void Ignores_device_in_out_and_pairs_by_sequence()
+    {
+        var punches = new[]
+        {
+            MakePunch(1, "2026-09-14T08:00:00", PunchDirection.In),
+            MakePunch(1, "2026-09-14T09:00:00", PunchDirection.In),
+            MakePunch(1, "2026-09-14T16:00:00", PunchDirection.Out)
+        };
+
+        var result = ShiftPairing.Pair(punches);
+
+        Assert.Equal(1m, Assert.Single(result.Shifts).Hours);
+        Assert.Equal("Entrada sin salida", Assert.Single(result.Issues).Message);
+        Assert.Equal(punches[2].Id, Assert.Single(result.OpenIns).Id);
+    }
+
+    [Fact]
+    public void First_checkpoint_opens_even_if_device_said_out()
+    {
+        var punches = new[]
+        {
+            MakePunch(1, "2026-09-14T08:00:00", PunchDirection.Out),
+            MakePunch(1, "2026-09-14T16:00:00", PunchDirection.In)
+        };
+
+        var result = ShiftPairing.Pair(punches);
+
+        Assert.Equal(8m, Assert.Single(result.Shifts).Hours);
+        Assert.Empty(result.Issues);
+    }
 }
 
 public class WeeklyPayrollServiceTests
@@ -144,6 +176,9 @@ public class WeekRangeTests
     public void Monday_is_start_of_week()
     {
         Assert.Equal(new DateOnly(2026, 9, 14), WeekRange.StartOfWeek(new DateOnly(2026, 9, 17)));
+        Assert.Equal(new DateOnly(2026, 9, 20), WeekRange.EndOfWeek(new DateOnly(2026, 9, 17)));
+        Assert.Equal(new DateOnly(2026, 9, 14), WeekRange.StartOfWeek(new DateOnly(2026, 9, 14)));
+        Assert.Equal(new DateOnly(2026, 9, 20), WeekRange.EndOfWeek(new DateOnly(2026, 9, 20)));
     }
 }
 
@@ -205,7 +240,7 @@ public class PresenceTests
     }
 
     [Fact]
-    public void Closed_shift_after_abandoned_in_is_not_working()
+    public void Odd_last_checkpoint_is_still_working()
     {
         var employees = new[]
         {
@@ -220,7 +255,8 @@ public class PresenceTests
 
         var status = Assert.Single(Presence.Snapshot(employees, punches));
 
-        Assert.Equal(PresenceKind.NotCheckedIn, status.Kind);
+        Assert.Equal(PresenceKind.CheckedIn, status.Kind);
+        Assert.Equal(DateTime.Parse("2026-09-17T16:00:00"), status.ClockedInAt);
     }
 }
 

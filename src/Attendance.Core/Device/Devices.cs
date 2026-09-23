@@ -7,7 +7,33 @@ public sealed class DevicePunch
     public required string DeviceUserId { get; init; }
     public required DateTime PunchedAt { get; init; }
     public PunchDirection Direction { get; init; } = PunchDirection.Unknown;
+    public int VerifyMode { get; init; }
+    public int Status { get; init; }
     public string? DeviceKey { get; init; }
+
+    public string VerifyModeLabel => VerifyMode switch
+    {
+        0 => "Clave",
+        1 => "Huella",
+        2 => "Tarjeta",
+        _ => $"Otro ({VerifyMode})"
+    };
+
+    public string StatusLabel => Status switch
+    {
+        0 => "Entrada",
+        1 => "Salida",
+        2 => "Salida descanso",
+        3 => "Entrada descanso",
+        4 => "OT entrada",
+        5 => "OT salida",
+        _ => Direction switch
+        {
+            PunchDirection.In => "Entrada",
+            PunchDirection.Out => "Salida",
+            _ => $"Otro ({Status})"
+        }
+    };
 }
 
 public interface IAttendanceDevice
@@ -15,49 +41,4 @@ public interface IAttendanceDevice
     string Name { get; }
     Task TestConnectionAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<DevicePunch>> DownloadLogsAsync(CancellationToken cancellationToken = default);
-}
-
-public sealed class MockAttendanceDevice : IAttendanceDevice
-{
-    private readonly Func<IReadOnlyList<Employee>> _employees;
-
-    public MockAttendanceDevice(Func<IReadOnlyList<Employee>> employees)
-    {
-        _employees = employees;
-    }
-
-    public string Name => "Simulador (Mac / pruebas)";
-
-    public Task TestConnectionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-    public Task<IReadOnlyList<DevicePunch>> DownloadLogsAsync(CancellationToken cancellationToken = default)
-    {
-        var now = DateTime.Now;
-        var today = DateOnly.FromDateTime(now);
-        var list = new List<DevicePunch>();
-
-        foreach (var employee in _employees().Where(e => e.IsActive))
-        {
-            var clockIn = today.ToDateTime(new TimeOnly(8, 5)).AddMinutes(employee.Id);
-            var clockOut = now.Hour >= 16
-                ? today.ToDateTime(new TimeOnly(16, 2)).AddMinutes(employee.Id)
-                : now.AddMinutes(-5);
-
-            list.Add(Create(employee, clockIn, PunchDirection.In));
-            if (now.Hour >= 12)
-            {
-                list.Add(Create(employee, clockOut, PunchDirection.Out));
-            }
-        }
-
-        return Task.FromResult<IReadOnlyList<DevicePunch>>(list);
-    }
-
-    private static DevicePunch Create(Employee employee, DateTime at, PunchDirection direction) => new()
-    {
-        DeviceUserId = employee.DeviceUserId,
-        PunchedAt = at,
-        Direction = direction,
-        DeviceKey = $"mock:{employee.DeviceUserId}:{at:yyyyMMddHHmmss}:{direction}"
-    };
 }

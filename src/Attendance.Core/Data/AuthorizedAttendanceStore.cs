@@ -74,6 +74,18 @@ public sealed class AuthorizedAttendanceStore : IAttendanceStore
         _inner.UpdateEmployee(employee);
     }
 
+    public EmployeeDeletePreview? GetEmployeeDeletePreview(long employeeId)
+    {
+        EnsureAdmin();
+        return _inner.GetEmployeeDeletePreview(employeeId);
+    }
+
+    public EmployeeDeleteResult DeleteEmployee(long employeeId)
+    {
+        EnsureAdmin();
+        return _inner.DeleteEmployee(employeeId);
+    }
+
     public IReadOnlyList<Punch> GetPunches(DateTime? from = null, DateTime? toExclusive = null)
     {
         EnsureSignedIn();

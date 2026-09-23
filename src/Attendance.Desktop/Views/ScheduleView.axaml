@@ -14,22 +14,22 @@
                     <WrapPanel>
                         <StackPanel Margin="0,0,16,8" Spacing="4">
                             <TextBlock Classes="muted" Text="Noche desde"/>
-                            <TextBox Width="90" Text="{Binding NightStartText}"/>
+                            <TextBox Width="120" Text="{Binding NightStartText}"/>
                         </StackPanel>
                         <StackPanel Margin="0,0,16,8" Spacing="4">
                             <TextBlock Classes="muted" Text="Noche hasta"/>
-                            <TextBox Width="90" Text="{Binding NightEndText}"/>
+                            <TextBox Width="120" Text="{Binding NightEndText}"/>
                         </StackPanel>
                         <StackPanel Margin="0,0,16,8" Spacing="4">
                             <TextBlock Classes="muted" Text="Extra después de (horas/día)"/>
-                            <TextBox Width="90" Text="{Binding ExtraAfterText}"/>
+                            <TextBox Width="120" Text="{Binding ExtraAfterText}"/>
                         </StackPanel>
                     </WrapPanel>
                     <TextBox Watermark="Festivos (yyyy-MM-dd, separados por coma)" Text="{Binding HolidaysText}"/>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Pintar noche y domingo" Command="{Binding ApplyNightWindowCommand}"/>
-                        <Button Content="Guardar horario" Classes="accent" Command="{Binding SaveCommand}"/>
-                    </StackPanel>
+                    <WrapPanel>
+                        <Button Margin="0,0,8,8" Content="Pintar noche y domingo" Command="{Binding ApplyNightWindowCommand}"/>
+                        <Button Margin="0,0,8,8" Content="Guardar horario" Classes="accent" Command="{Binding SaveCommand}"/>
+                    </WrapPanel>
                     <TextBlock Text="{Binding Status}" Classes="muted" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>

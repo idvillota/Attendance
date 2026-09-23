@@ -1,6 +1,7 @@
 using Attendance.Core;
 using Attendance.Core.Data;
 using Attendance.Core.Device;
+using Attendance.Desktop;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -10,25 +11,24 @@ public partial class DeviceViewModel : ViewModelBase
 {
     private readonly IAttendanceStore _store;
     private readonly IAttendanceSyncService _sync;
+    private readonly IAppNavigator _navigator;
 
-    public DeviceViewModel(IAttendanceStore store, IAttendanceSyncService sync)
+    public DeviceViewModel(IAttendanceStore store, IAttendanceSyncService sync, IAppNavigator navigator)
     {
         _store = store;
         _sync = sync;
+        _navigator = navigator;
         Reload();
     }
 
     [ObservableProperty]
-    private bool _useMockDevice = true;
-
-    [ObservableProperty]
-    private string _deviceIp = "192.168.1.201";
+    private string _deviceIp = K30Defaults.Ip;
 
     [ObservableProperty]
     private string _devicePort = "4370";
 
     [ObservableProperty]
-    private string _status = "En este Mac use el simulador. En Windows, ponga la IP del K30.";
+    private string _status = $"K30 en {K30Defaults.Endpoint}. Descargar ahora abre Logs K30 para revisar; no guarda en nómina hasta que confirme.";
 
     [ObservableProperty]
     private string _databasePath = AppPaths.DatabaseFile;
@@ -36,7 +36,6 @@ public partial class DeviceViewModel : ViewModelBase
     public void Reload()
     {
         var settings = _store.GetSettings();
-        UseMockDevice = settings.UseMockDevice;
         DeviceIp = settings.DeviceIp;
         DevicePort = settings.DevicePort.ToString();
         DatabasePath = _store.FilePath;
@@ -52,7 +51,6 @@ public partial class DeviceViewModel : ViewModelBase
         }
 
         var settings = _store.GetSettings();
-        settings.UseMockDevice = UseMockDevice;
         settings.DeviceIp = DeviceIp;
         settings.DevicePort = port;
         _store.SaveSettings(settings);
@@ -81,10 +79,11 @@ public partial class DeviceViewModel : ViewModelBase
         try
         {
             Save();
-            var (device, count) = await _sync.DownloadConfiguredAsync(_store.GetSettings());
+            var (device, count) = await _sync.PullToDraftAsync(_store.GetSettings());
             Status = count == 0
-                ? $"Sin marcaciones nuevas desde {device.Name}."
-                : $"Se importaron {count} marcación(es) desde {device.Name}.";
+                ? $"Sin marcaciones en {device.Name}."
+                : $"{count} marcación(es) de {device.Name} listas para revisar en Logs K30.";
+            _navigator.GoToDeviceLogs();
         }
         catch (Exception ex)
         {

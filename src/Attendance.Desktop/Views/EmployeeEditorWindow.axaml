@@ -5,7 +5,7 @@
         x:Class="Attendance.Desktop.Views.EmployeeEditorWindow"
         x:DataType="vm:EmployeeEditorViewModel"
         Title="{Binding Title}"
-        Width="440"
+        Width="480"
         SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
@@ -13,7 +13,7 @@
     <StackPanel Spacing="12">
         <TextBlock Text="{Binding Title}" Classes="h1"/>
         <TextBlock Classes="muted" TextWrapping="Wrap"
-                   Text="El ID del K30 es el número con el que la persona está inscrita en el reloj."/>
+                   Text="Nombre y rol quedan en este PC. El ID del K30 se asigna solo (el más bajo libre). Al guardar se crea o actualiza también en el dispositivo."/>
         <TextBox Watermark="Nombre" Text="{Binding FormName}"/>
         <ComboBox ItemsSource="{Binding Roles}"
                   SelectedItem="{Binding SelectedRole}"
@@ -25,12 +25,43 @@
                 </DataTemplate>
             </ComboBox.ItemTemplate>
         </ComboBox>
-        <TextBox Watermark="ID en el K30" Text="{Binding FormDeviceUserId}"/>
+        <DockPanel>
+            <Button DockPanel.Dock="Right"
+                    Content="ID libre"
+                    Command="{Binding SuggestPinCommand}"
+                    Margin="8,0,0,0"
+                    IsEnabled="{Binding !IsBusy}"/>
+            <TextBox Watermark="ID en el K30 (se sugiere el más bajo libre)"
+                     Text="{Binding FormDeviceUserId}"/>
+        </DockPanel>
         <CheckBox Content="Activo" IsChecked="{Binding IsActive}"/>
+        <CheckBox Content="Crear o actualizar también en el K30" IsChecked="{Binding SyncToDevice}"/>
+        <DockPanel>
+            <Button DockPanel.Dock="Right"
+                    Content="Generar clave"
+                    Command="{Binding GeneratePasswordCommand}"
+                    Margin="8,0,0,0"
+                    IsEnabled="{Binding !IsBusy}"/>
+            <TextBox Watermark="Clave temporal del reloj (4 a 8 dígitos)"
+                     Text="{Binding ClockPassword}"/>
+        </DockPanel>
+        <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding DeviceStatus}"/>
         <TextBlock Text="{Binding Error}" Foreground="#B42318" TextWrapping="Wrap"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
-            <Button Content="Cancelar" Click="CancelClick"/>
-            <Button Content="Guardar" Classes="accent" Click="SaveClick"/>
-        </StackPanel>
+        <WrapPanel HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Margin="0,0,8,8"
+                    Content="Eliminar"
+                    Classes="danger"
+                    Click="DeleteClick"
+                    IsVisible="{Binding CanDelete}"
+                    IsEnabled="{Binding !IsBusy}"/>
+            <Button Margin="0,0,8,8" Content="Cancelar" Click="CancelClick" IsEnabled="{Binding !IsBusy}"/>
+            <Button Margin="0,0,8,8"
+                    Content="Registrar huella"
+                    Command="{Binding EnrollCommand}"
+                    IsVisible="{Binding CanEnroll}"
+                    IsEnabled="{Binding !IsBusy}"/>
+            <Button Margin="0,0,8,8" Content="Guardar" Classes="accent" Click="SaveClick" IsEnabled="{Binding !IsBusy}"/>
+            <Button Margin="0,0,0,8" Content="Cerrar" Click="CloseClick" IsVisible="{Binding Saved}"/>
+        </WrapPanel>
     </StackPanel>
 </Window>

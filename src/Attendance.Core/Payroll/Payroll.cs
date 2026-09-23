@@ -10,6 +10,8 @@ public static class WeekRange
         return date.AddDays(-offset);
     }
 
+    public static DateOnly EndOfWeek(DateOnly date) => StartOfWeek(date).AddDays(6);
+
     public static DateOnly Today() => DateOnly.FromDateTime(DateTime.Now);
 
     public static DateTime RangeStart(DateOnly weekStart) => weekStart.ToDateTime(TimeOnly.MinValue);
@@ -35,24 +37,9 @@ public static class ShiftPairing
             Punch? open = null;
             foreach (var punch in group.OrderBy(p => p.PunchedAt).ThenBy(p => p.Id))
             {
-                var direction = punch.Direction == PunchDirection.Unknown
-                    ? open is null ? PunchDirection.In : PunchDirection.Out
-                    : punch.Direction;
-
-                if (direction == PunchDirection.In)
-                {
-                    if (open is not null)
-                    {
-                        issues.Add(new PunchIssue(open.EmployeeId, open.Id, open.PunchedAt, "Entrada sin salida"));
-                    }
-
-                    open = punch;
-                    continue;
-                }
-
                 if (open is null)
                 {
-                    issues.Add(new PunchIssue(punch.EmployeeId, punch.Id, punch.PunchedAt, "Salida sin entrada"));
+                    open = punch;
                     continue;
                 }
 

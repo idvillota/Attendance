@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Attendance.Desktop.ViewModels"
+        x:Class="Attendance.Desktop.Views.EmployeeDeleteWindow"
+        x:DataType="vm:EmployeeDeleteViewModel"
+        Title="{Binding Title}"
+        Width="480"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Padding="24">
+    <StackPanel Spacing="12">
+        <TextBlock Text="{Binding Title}" Classes="h1"/>
+        <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding Summary}"/>
+        <TextBlock TextWrapping="Wrap"
+                   Foreground="#B42318"
+                   Text="{Binding PunchWarning}"
+                   IsVisible="{Binding HasPunchWarning}"/>
+        <TextBlock Classes="muted" TextWrapping="Wrap"
+                   Text="{Binding LoginWarning}"
+                   IsVisible="{Binding HasLoginWarning}"/>
+        <CheckBox Content="{Binding DeviceCheckboxLabel}"
+                  IsChecked="{Binding RemoveFromDevice}"
+                  IsEnabled="{Binding !DeviceRetryPending}"/>
+        <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding DeviceStatus}"/>
+        <TextBlock Text="{Binding Error}" Foreground="#B42318" TextWrapping="Wrap"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
+            <Button Content="Cancelar" Click="CancelClick" IsEnabled="{Binding !IsBusy}"/>
+            <Button Content="{Binding ConfirmLabel}"
+                    Classes="danger"
+                    Click="ConfirmClick"
+                    IsEnabled="{Binding !IsBusy}"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -42,6 +42,23 @@ public sealed class Employee
         $"{RoleName} · ID en el K30 {DeviceUserId}" + (IsActive ? string.Empty : " · Inactivo");
 }
 
+public sealed class EmployeeDeletePreview
+{
+    public required long EmployeeId { get; init; }
+    public required string Name { get; init; }
+    public required string DeviceUserId { get; init; }
+    public int PunchCount { get; init; }
+    public IReadOnlyList<string> LinkedUsernames { get; init; } = [];
+}
+
+public sealed class EmployeeDeleteResult
+{
+    public required string Name { get; init; }
+    public required string DeviceUserId { get; init; }
+    public int RemovedPunches { get; init; }
+    public IReadOnlyList<string> UnlinkedUsernames { get; init; } = [];
+}
+
 public sealed class Punch
 {
     public long Id { get; set; }
@@ -61,7 +78,7 @@ public sealed class Punch
 
     public string SourceLabel => Source switch
     {
-        PunchSource.Mock => "Simulador",
+        PunchSource.Mock => "Demo",
         PunchSource.Device => "K30",
         PunchSource.Import => "CSV",
         _ => "Manual"
@@ -85,9 +102,8 @@ public sealed record PunchIssue(
 
 public sealed class AppSettings
 {
-    public bool UseMockDevice { get; set; } = true;
-    public string DeviceIp { get; set; } = "192.168.1.201";
-    public int DevicePort { get; set; } = 4370;
+    public string DeviceIp { get; set; } = Device.K30Defaults.Ip;
+    public int DevicePort { get; set; } = Device.K30Defaults.Port;
     public int DeviceNumber { get; set; } = 1;
     public DateTime? LastDownloadAt { get; set; }
     public TenantSchedule Schedule { get; set; } = TenantSchedule.Default();

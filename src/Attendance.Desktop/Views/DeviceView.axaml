@@ -3,21 +3,20 @@
              xmlns:vm="using:Attendance.Desktop.ViewModels"
              x:Class="Attendance.Desktop.Views.DeviceView"
              x:DataType="vm:DeviceViewModel">
-    <StackPanel MaxWidth="640" Spacing="16">
+    <StackPanel MaxWidth="720" Spacing="16">
         <Border Classes="card">
             <StackPanel Spacing="12">
                 <TextBlock Text="Conexión al reloj" FontWeight="SemiBold" FontSize="16"/>
                 <TextBlock Classes="muted" TextWrapping="Wrap"
-                           Text="Las personas marcan con la huella en el K30. Esta PC solo descarga esas marcaciones. En el Mac deje el simulador encendido."/>
-                <CheckBox Content="Usar simulador (Mac / pruebas)" IsChecked="{Binding UseMockDevice}"/>
+                           Text="Las personas marcan con la huella en el K30. Descargar ahora lee el reloj y abre Logs K30 para revisar; no guarda en nómina hasta que confirme. El CSV sí se importa de inmediato."/>
                 <TextBox Watermark="IP del K30" Text="{Binding DeviceIp}"/>
                 <TextBox Watermark="Puerto (4370)" Text="{Binding DevicePort}"/>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Content="Guardar" Command="{Binding SaveCommand}"/>
-                    <Button Content="Probar conexión" Command="{Binding TestCommand}"/>
-                    <Button Content="Descargar ahora" Classes="accent" Command="{Binding DownloadCommand}"/>
-                    <Button Content="Importar CSV" Click="ImportCsvClick"/>
-                </StackPanel>
+                <WrapPanel>
+                    <Button Margin="0,0,8,8" Content="Guardar" Command="{Binding SaveCommand}"/>
+                    <Button Margin="0,0,8,8" Content="Probar conexión" Command="{Binding TestCommand}"/>
+                    <Button Margin="0,0,8,8" Content="Descargar ahora" Classes="accent" Command="{Binding DownloadCommand}"/>
+                    <Button Margin="0,0,8,8" Content="Importar CSV" Click="ImportCsvClick"/>
+                </WrapPanel>
                 <TextBlock Text="{Binding Status}" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>

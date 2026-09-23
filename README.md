@@ -9,7 +9,7 @@ cd apps/Attendance
 dotnet run --project src/Attendance.Desktop
 ```
 
-Use **Reloj K30 → Usar simulador**. Demo employees and a week of punches are created on first launch. The first screen asks you to **create an administrator**. That account sees everyone; a **básico** account (Usuarios) is linked to one person and only sees their week and punches.
+The app talks to the **ZKTeco K30 at 192.168.39.201:4370**. Reloj and Logs K30 read the live clock only. Demo employees are still created on first launch. The first screen asks you to **create an administrator**.
 
 ## Restaurant PC (Windows)
 
@@ -17,7 +17,7 @@ Use **Reloj K30 → Usar simulador**. Demo employees and a week of punches are c
 dotnet publish src/Attendance.Desktop -c Release -r win-x64 --self-contained true -o dist/win
 ```
 
-Copy `dist/win` to the PC. Set the K30 IP (default port **4370**) and uncheck the simulator. Employee **ID en K30** must match the user number on the clock.
+Copy `dist/win` to the PC. Set the K30 IP (default port **4370**). Employee **ID en K30** must match the user number on the clock.
 
 Backup: copy the SQLite file shown on the Reloj K30 screen (`HostAttendance/attendance.db`).
 

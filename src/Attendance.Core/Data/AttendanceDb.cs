@@ -121,6 +121,70 @@ public sealed class AttendanceDb : IAttendanceStore, IUserStore
         cmd.ExecuteNonQuery();
     }
 
+    public EmployeeDeletePreview? GetEmployeeDeletePreview(long employeeId)
+    {
+        using var connection = _session.Open();
+        using var lookup = connection.CreateCommand();
+        lookup.CommandText = """
+            SELECT e.id, e.name, e.device_user_id,
+                   (SELECT COUNT(*) FROM punches p WHERE p.employee_id = e.id),
+                   (SELECT GROUP_CONCAT(u.username, ', ') FROM users u WHERE u.employee_id = e.id)
+            FROM employees e
+            WHERE e.id = $id
+            LIMIT 1
+            """;
+        lookup.Parameters.AddWithValue("$id", employeeId);
+        using var reader = lookup.ExecuteReader();
+        if (!reader.Read())
+        {
+            return null;
+        }
+
+        var names = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
+        return new EmployeeDeletePreview
+        {
+            EmployeeId = reader.GetInt64(0),
+            Name = reader.GetString(1),
+            DeviceUserId = reader.GetString(2),
+            PunchCount = Convert.ToInt32(reader.GetValue(3)),
+            LinkedUsernames = SplitNames(names)
+        };
+    }
+
+    public EmployeeDeleteResult DeleteEmployee(long employeeId)
+    {
+        var preview = GetEmployeeDeletePreview(employeeId)
+            ?? throw new InvalidOperationException("La persona no existe.");
+
+        using var connection = _session.Open();
+        using var tx = connection.BeginTransaction();
+        try
+        {
+            Execute(connection, tx, "DELETE FROM punches WHERE employee_id = $id", employeeId);
+            Execute(connection, tx, """
+                UPDATE users
+                SET employee_id = NULL,
+                    is_active = CASE WHEN app_role = 'Basic' THEN 0 ELSE is_active END
+                WHERE employee_id = $id
+                """, employeeId);
+            Execute(connection, tx, "DELETE FROM employees WHERE id = $id", employeeId);
+            tx.Commit();
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+
+        return new EmployeeDeleteResult
+        {
+            Name = preview.Name,
+            DeviceUserId = preview.DeviceUserId,
+            RemovedPunches = preview.PunchCount,
+            UnlinkedUsernames = preview.LinkedUsernames
+        };
+    }
+
     public IReadOnlyList<Punch> GetPunches(DateTime? from = null, DateTime? toExclusive = null)
     {
         using var connection = _session.Open();
@@ -203,9 +267,8 @@ public sealed class AttendanceDb : IAttendanceStore, IUserStore
         var map = ReadSettingsMap();
         return new AppSettings
         {
-            UseMockDevice = SqliteSession.GetBool(map, "use_mock_device", true),
-            DeviceIp = SqliteSession.GetString(map, "device_ip", "192.168.1.201"),
-            DevicePort = SqliteSession.GetInt(map, "device_port", 4370),
+            DeviceIp = SqliteSession.GetString(map, "device_ip", Device.K30Defaults.Ip),
+            DevicePort = SqliteSession.GetInt(map, "device_port", Device.K30Defaults.Port),
             DeviceNumber = SqliteSession.GetInt(map, "device_number", 1),
             LastDownloadAt = SqliteSession.GetTime(map, "last_download_at"),
             Schedule = ScheduleSettingsMapper.FromMap(map)
@@ -214,7 +277,6 @@ public sealed class AttendanceDb : IAttendanceStore, IUserStore
 
     public void SaveSettings(AppSettings settings)
     {
-        UpsertSetting("use_mock_device", settings.UseMockDevice ? "1" : "0");
         UpsertSetting("device_ip", settings.DeviceIp.Trim());
         UpsertSetting("device_port", settings.DevicePort.ToString(System.Globalization.CultureInfo.InvariantCulture));
         UpsertSetting("device_number", settings.DeviceNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
@@ -404,4 +466,18 @@ public sealed class AttendanceDb : IAttendanceStore, IUserStore
 
         return list;
     }
+
+    private static void Execute(SqliteConnection connection, SqliteTransaction tx, string sql, long employeeId)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.Transaction = tx;
+        cmd.CommandText = sql;
+        cmd.Parameters.AddWithValue("$id", employeeId);
+        cmd.ExecuteNonQuery();
+    }
+
+    private static IReadOnlyList<string> SplitNames(string raw) =>
+        string.IsNullOrWhiteSpace(raw)
+            ? []
+            : raw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 }

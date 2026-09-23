@@ -12,6 +12,8 @@ public interface IAttendanceStore
     IReadOnlyList<Employee> GetEmployees(bool activeOnly = false);
     Employee AddEmployee(string name, long roleId, string deviceUserId);
     void UpdateEmployee(Employee employee);
+    EmployeeDeletePreview? GetEmployeeDeletePreview(long employeeId);
+    EmployeeDeleteResult DeleteEmployee(long employeeId);
     IReadOnlyList<Punch> GetPunches(DateTime? from = null, DateTime? toExclusive = null);
     Punch AddPunch(long employeeId, DateTime punchedAt, PunchDirection direction, PunchSource source, string? deviceKey = null);
     int TryAddPunch(long employeeId, DateTime punchedAt, PunchDirection direction, PunchSource source, string? deviceKey);

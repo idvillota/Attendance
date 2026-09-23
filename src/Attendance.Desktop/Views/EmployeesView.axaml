@@ -13,7 +13,7 @@
                     IsVisible="{Binding CanManagePeople}"/>
             <StackPanel Spacing="8" Margin="0,0,16,0">
                 <TextBlock Classes="muted" TextWrapping="Wrap"
-                           Text="Directorio del restaurante. Las personas marcan en el K30; aquí solo se edita quién es quién."/>
+                           Text="Directorio del restaurante. Al agregar o editar se guarda aquí y se crea o actualiza el mismo PIN en el K30 (clave temporal; la huella se registra en el reloj)."/>
                 <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding Freshness}"/>
                 <StackPanel Orientation="Horizontal" Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -49,12 +49,16 @@
                                 <TextBlock Text="{Binding Subtitle}" Classes="muted"/>
                                 <TextBlock Text="{Binding PresenceLabel}" FontSize="12" Foreground="#475467"/>
                             </StackPanel>
-                            <Button Grid.Column="2"
-                                    Content="Editar"
-                                    Classes="ghost"
-                                    VerticalAlignment="Center"
-                                    Click="EditClick"
-                                    IsVisible="{Binding CanEdit}"/>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <Button Content="Editar"
+                                        Classes="ghost"
+                                        Click="EditClick"
+                                        IsVisible="{Binding CanEdit}"/>
+                                <Button Content="Eliminar"
+                                        Classes="ghost"
+                                        Click="DeleteClick"
+                                        IsVisible="{Binding CanEdit}"/>
+                            </StackPanel>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

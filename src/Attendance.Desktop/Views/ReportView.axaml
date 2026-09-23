@@ -5,14 +5,14 @@
              x:Class="Attendance.Desktop.Views.ReportView"
              x:DataType="vm:ReportViewModel">
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" RowSpacing="16">
-        <DockPanel>
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
-                <Button Content="Semana anterior" Command="{Binding PreviousWeekCommand}"/>
-                <Button Content="Semana siguiente" Command="{Binding NextWeekCommand}"/>
-                <Button Content="Bajar marcaciones" Classes="accent" Command="{Binding DownloadCommand}" IsVisible="{Binding CanManagePayroll}"/>
-                <Button Content="Exportar Excel" Click="ExportClick" IsVisible="{Binding CanManagePayroll}"/>
-            </StackPanel>
-            <StackPanel Spacing="2">
+        <DockPanel LastChildFill="True">
+            <WrapPanel DockPanel.Dock="Right" Margin="12,0,0,8">
+                <Button Margin="0,0,8,8" Content="Semana anterior" Command="{Binding PreviousWeekCommand}"/>
+                <Button Margin="0,0,8,8" Content="Semana siguiente" Command="{Binding NextWeekCommand}"/>
+                <Button Margin="0,0,8,8" Content="Bajar marcaciones" Classes="accent" Command="{Binding DownloadCommand}" IsVisible="{Binding CanManagePayroll}" ToolTip.Tip="Lee el reloj y abre Logs K30 para revisar. No guarda en nómina hasta que confirme."/>
+                <Button Margin="0,0,0,8" Content="Exportar Excel" Click="ExportClick" IsVisible="{Binding CanManagePayroll}"/>
+            </WrapPanel>
+            <StackPanel Spacing="4" Margin="0,0,0,8">
                 <TextBlock Text="{Binding WeekLabel}" FontWeight="SemiBold"/>
                 <TextBlock Classes="muted" Text="{Binding Status}" TextWrapping="Wrap"/>
             </StackPanel>

@@ -1,0 +1,250 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Attendance.Desktop.ViewModels"
+             xmlns:domain="using:Attendance.Core.Domain"
+             xmlns:device="using:Attendance.Core.Device"
+             x:Class="Attendance.Desktop.Views.DeviceLogsView"
+             x:DataType="vm:DeviceLogsViewModel">
+    <Grid RowDefinitions="Auto,*,*" RowSpacing="16">
+        <StackPanel Spacing="12">
+            <DockPanel LastChildFill="True">
+                <WrapPanel DockPanel.Dock="Right" Margin="12,0,0,0">
+                    <Button Margin="0,0,8,8"
+                            Content="Cargar del reloj"
+                            Command="{Binding LoadCommand}"
+                            IsEnabled="{Binding !IsBusy}"/>
+                    <Button Margin="0,0,8,8"
+                            Content="Quitar seleccionada"
+                            Command="{Binding RemoveSelectedCommand}"
+                            IsEnabled="{Binding HasSelection}"/>
+                    <Button Margin="0,0,0,8"
+                            Content="Guardar en nómina"
+                            Classes="accent"
+                            Command="{Binding SaveCommand}"
+                            IsEnabled="{Binding CanSave}"/>
+                </WrapPanel>
+                <StackPanel Spacing="6" Margin="0,0,12,8">
+                    <TextBlock Classes="muted" TextWrapping="Wrap"
+                               Text="Cada marca es un punto de control. El tipo Entrada/Salida del K30 no se usa para pagar. Cargar lee todo el reloj; el período de abajo decide qué se muestra y qué se guarda."/>
+                    <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding Status}"/>
+                </StackPanel>
+            </DockPanel>
+
+            <Border Classes="filter">
+                <DockPanel LastChildFill="True">
+                    <Button DockPanel.Dock="Right"
+                            Content="Esta semana"
+                            Classes="ghost"
+                            VerticalAlignment="Bottom"
+                            Margin="16,0,0,0"
+                            Command="{Binding ThisWeekCommand}"/>
+                    <StackPanel Spacing="10">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Período a pagar" FontWeight="SemiBold"/>
+                            <TextBlock Classes="muted"
+                                       Text="La tabla, las jornadas y Guardar en nómina usan solo estas fechas."/>
+                        </StackPanel>
+                        <WrapPanel>
+                            <StackPanel MinWidth="220" Margin="0,0,8,0">
+                                <TextBlock Classes="fieldLabel" Text="Desde"/>
+                                <DatePicker Classes="range" SelectedDate="{Binding FromDate}"/>
+                            </StackPanel>
+                            <TextBlock Text="→"
+                                       FontSize="18"
+                                       Foreground="#98A2B3"
+                                       VerticalAlignment="Bottom"
+                                       Margin="4,0,12,6"/>
+                            <StackPanel MinWidth="220">
+                                <TextBlock Classes="fieldLabel" Text="Hasta"/>
+                                <DatePicker Classes="range" SelectedDate="{Binding ToDate}"/>
+                            </StackPanel>
+                        </WrapPanel>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <TextBlock FontWeight="SemiBold" Text="{Binding PreviewSummary}"/>
+
+            <Border Classes="card" IsVisible="{Binding HasSelection}" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Corregir la marcación seleccionada" FontWeight="SemiBold"/>
+                    <WrapPanel>
+                        <DatePicker Margin="0,0,12,8"
+                                    VerticalAlignment="Center"
+                                    SelectedDate="{Binding EditDate}"/>
+                        <TimePicker Margin="0,0,12,8"
+                                    VerticalAlignment="Center"
+                                    ClockIdentifier="24HourClock"
+                                    SelectedTime="{Binding EditTime}"/>
+                        <ComboBox Margin="0,0,12,8"
+                                  MinWidth="200"
+                                  VerticalAlignment="Center"
+                                  ItemsSource="{Binding Employees}"
+                                  SelectedItem="{Binding AssignEmployee}"
+                                  PlaceholderText="Asignar persona">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="domain:Employee">
+                                    <TextBlock Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Margin="0,0,12,8"
+                                VerticalAlignment="Center"
+                                Content="Aplicar"
+                                Classes="accent"
+                                Command="{Binding ApplyEditCommand}"/>
+                    </WrapPanel>
+                    <TextBlock Classes="muted" TextWrapping="Wrap"
+                               Text="Si el ID del reloj no tiene persona, al aplicar se guarda ese ID en la persona elegida para la próxima descarga."/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <Border Grid.Row="1" Classes="card" Padding="0">
+            <DataGrid ItemsSource="{Binding Logs}"
+                      SelectedItem="{Binding Selected}"
+                      IsReadOnly="True"
+                      AutoGenerateColumns="False"
+                      CanUserResizeColumns="True"
+                      GridLinesVisibility="Horizontal"
+                      BorderThickness="0"
+                      Background="Transparent">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="#" Width="56">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:DeviceLogRow">
+                                <TextBlock Text="{Binding RecordNumber}" VerticalAlignment="Center" Margin="16,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="ID K30" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:DeviceLogRow">
+                                <TextBlock Text="{Binding DeviceUserId}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Persona" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:DeviceLogRow">
+                                <TextBlock Text="{Binding EmployeeName}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Coincide" Width="90">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:DeviceLogRow">
+                                <TextBlock Text="{Binding MatchLabel}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Fecha y hora" Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:DeviceLogRow">
+                                <TextBlock Text="{Binding PunchedAt, StringFormat=g}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Método" Width="110">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:DeviceLogRow">
+                                <TextBlock Text="{Binding VerifyModeLabel}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Estado (reloj)" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:DeviceLogRow">
+                                <TextBlock Text="{Binding StatusLabel}" VerticalAlignment="Center" Margin="8,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="16">
+            <Border Classes="card" Padding="0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="16,12,16,8" FontWeight="SemiBold"
+                               Text="Jornadas que se pagarían"/>
+                    <DataGrid ItemsSource="{Binding ProposedShifts}"
+                              IsReadOnly="True"
+                              AutoGenerateColumns="False"
+                              CanUserResizeColumns="True"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="0"
+                              Background="Transparent">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Persona" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="device:ProposedShiftRow">
+                                        <TextBlock Text="{Binding EmployeeName}" VerticalAlignment="Center" Margin="16,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Entrada" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="device:ProposedShiftRow">
+                                        <TextBlock Text="{Binding ClockIn, StringFormat=g}" VerticalAlignment="Center" Margin="8,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Salida" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="device:ProposedShiftRow">
+                                        <TextBlock Text="{Binding ClockOut, StringFormat=g}" VerticalAlignment="Center" Margin="8,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Horas" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="device:ProposedShiftRow">
+                                        <TextBlock Text="{Binding Hours, StringFormat=0.##}" VerticalAlignment="Center" Margin="8,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+
+            <Border Classes="card" Padding="0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="16,12,16,8" FontWeight="SemiBold"
+                               Text="Marcaciones sueltas"/>
+                    <DataGrid ItemsSource="{Binding Issues}"
+                              IsReadOnly="True"
+                              AutoGenerateColumns="False"
+                              BorderThickness="0"
+                              Background="Transparent"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Persona" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="domain:PunchIssue">
+                                        <TextBlock Text="{Binding EmployeeName}" VerticalAlignment="Center" Margin="16,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Fecha" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="domain:PunchIssue">
+                                        <TextBlock Text="{Binding PunchedAt, StringFormat=g}" VerticalAlignment="Center" Margin="8,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Problema" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="domain:PunchIssue">
+                                        <TextBlock Text="{Binding Message}" VerticalAlignment="Center" Margin="8,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
