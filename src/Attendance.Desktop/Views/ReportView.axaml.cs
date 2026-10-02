@@ -31,4 +31,24 @@ public partial class ReportView : UserControl
             vm.ExportTo(path);
         }
     }
+
+    private async void ExportPdfClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ReportViewModel vm || !vm.CanManagePayroll)
+        {
+            return;
+        }
+
+        var path = await DesktopDialogs.SaveFileAsync(
+            this,
+            "Exportar reporte semanal",
+            "nomina-semanal.pdf",
+            "PDF",
+            "*.pdf");
+
+        if (path is not null)
+        {
+            vm.ExportPdfTo(path);
+        }
+    }
 }

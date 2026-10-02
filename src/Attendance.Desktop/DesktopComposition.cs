@@ -33,6 +33,7 @@ internal static class DesktopComposition
         services.AddSingleton<IDeviceUserService, DeviceUserService>();
         services.AddSingleton<IAppNavigator, AppNavigator>();
         services.AddSingleton<IPayrollExporter, PayrollExcelExporter>();
+        services.AddSingleton<IPayrollPdfExporter, PayrollPdfExporter>();
         services.AddSingleton<DesktopShell>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<MainViewModel>();

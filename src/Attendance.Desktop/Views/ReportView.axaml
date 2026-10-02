@@ -10,7 +10,8 @@
                 <Button Margin="0,0,8,8" Content="Semana anterior" Command="{Binding PreviousWeekCommand}"/>
                 <Button Margin="0,0,8,8" Content="Semana siguiente" Command="{Binding NextWeekCommand}"/>
                 <Button Margin="0,0,8,8" Content="Bajar marcaciones" Classes="accent" Command="{Binding DownloadCommand}" IsVisible="{Binding CanManagePayroll}" ToolTip.Tip="Lee el reloj y abre Logs K30 para revisar. No guarda en nómina hasta que confirme."/>
-                <Button Margin="0,0,0,8" Content="Exportar Excel" Click="ExportClick" IsVisible="{Binding CanManagePayroll}"/>
+                <Button Margin="0,0,8,8" Content="Exportar Excel" Click="ExportClick" IsVisible="{Binding CanManagePayroll}"/>
+                <Button Margin="0,0,0,8" Content="Exportar PDF" Click="ExportPdfClick" IsVisible="{Binding CanManagePayroll}"/>
             </WrapPanel>
             <StackPanel Spacing="4" Margin="0,0,0,8">
                 <TextBlock Text="{Binding WeekLabel}" FontWeight="SemiBold"/>

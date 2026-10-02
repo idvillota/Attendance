@@ -27,7 +27,7 @@ Pay is sliced by the 7×24 calendar in **Horario y recargos** and the eight COP 
 
 Entrada without salida (or the reverse) is listed as an anomaly and is not paid until you fix the punch.
 
-Excel export has three sheets: **Nomina**, **Por_hora**, and **Anomalias**.
+Excel export has three sheets: **Nomina**, **Por_hora**, and **Anomalias**. **Exportar PDF** prints the same weekly totals for the restaurant PC.
 
 ## Layout
 

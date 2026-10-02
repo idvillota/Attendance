@@ -29,6 +29,12 @@ public class AttendanceDbTests
             Assert.True(File.Exists(xlsx));
             File.Delete(xlsx);
 
+            var pdf = Path.ChangeExtension(path, ".pdf");
+            new PayrollPdfExporter().Export(report, pdf);
+            Assert.True(File.Exists(pdf));
+            Assert.True(new FileInfo(pdf).Length > 0);
+            File.Delete(pdf);
+
             db.SaveSettings(new Attendance.Core.Domain.AppSettings
             {
                 LastDownloadAt = new DateTime(2026, 9, 17, 21, 0, 0)

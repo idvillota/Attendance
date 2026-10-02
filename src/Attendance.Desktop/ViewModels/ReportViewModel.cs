@@ -17,6 +17,7 @@ public partial class ReportViewModel : ViewModelBase
     private readonly IAttendanceStore _store;
     private readonly IWeeklyPayrollService _payroll;
     private readonly IPayrollExporter _exporter;
+    private readonly IPayrollPdfExporter _pdf;
     private readonly IAttendanceSyncService _sync;
     private readonly IAuthSession _session;
     private readonly IAppNavigator _navigator;
@@ -25,6 +26,7 @@ public partial class ReportViewModel : ViewModelBase
         IAttendanceStore store,
         IWeeklyPayrollService payroll,
         IPayrollExporter exporter,
+        IPayrollPdfExporter pdf,
         IAttendanceSyncService sync,
         IAuthSession session,
         IAppNavigator navigator)
@@ -32,6 +34,7 @@ public partial class ReportViewModel : ViewModelBase
         _store = store;
         _payroll = payroll;
         _exporter = exporter;
+        _pdf = pdf;
         _sync = sync;
         _session = session;
         _navigator = navigator;
@@ -157,5 +160,21 @@ public partial class ReportViewModel : ViewModelBase
 
         _exporter.Export(_report!, path);
         Status = "Reporte Excel guardado.";
+    }
+
+    public void ExportPdfTo(string path)
+    {
+        if (!_session.IsAdmin)
+        {
+            return;
+        }
+
+        if (_report is null)
+        {
+            Reload();
+        }
+
+        _pdf.Export(_report!, path);
+        Status = "Reporte PDF guardado.";
     }
 }
